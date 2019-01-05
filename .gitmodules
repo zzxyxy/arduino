@@ -1,6 +1,6 @@
 [submodule "libraries/Zchaos"]
 	path = libraries/Zchaos
-	url = 172.20.0.2:git/Zchaos
+	url = ssh://172.22.1.3:/git/zchaos
 [submodule "Zchaos"]
 	path = Zchaos
 	url = ssh://172.22.1.3:/git/zchaos
