@@ -16,9 +16,15 @@ Zsmonoff::~Zsmonoff()
 }
 
 
+Zsmonoff::State Zsmonoff::getState()
+{
+  return m_state;
+}
+
+
 void Zsmonoff::setup() {
-	digitalWrite(m_pin, HIGH);	
-	pinMode(m_pin, OUTPUT);     
+	pinMode(m_pin, OUTPUT);
+	digitalWrite(m_pin, HIGH);     
 }
 
 

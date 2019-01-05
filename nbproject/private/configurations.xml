@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="100">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="." name="0">
+      <df name="arduino_slave">
+      </df>
+      <df name="dropit">
+      </df>
+      <df name="libraries">
+        <df name="Adafruit_CAP1188_Library-master">
+          <df name=".github">
+          </df>
+          <df name="examples">
+            <df name="cap1188test">
+            </df>
+          </df>
+          <in>Adafruit_CAP1188.cpp</in>
+          <in>Adafruit_CAP1188.h</in>
+        </df>
+        <df name="Adafruit_Circuit_Playground">
+          <df name="examples">
+            <df name="accel_mouse">
+            </df>
+            <df name="accelTap">
+            </df>
+            <df name="analog_sensors">
+            </df>
+            <df name="CircuitPlaygroundFirmata">
+            </df>
+            <df name="color_sense">
+            </df>
+            <df name="comm_badge">
+              <in>coin.h</in>
+              <in>trek.h</in>
+            </df>
+            <df name="demo">
+            </df>
+            <df name="FidgetSpinner">
+              <in>FidgetSpinner.h</in>
+              <in>PeakDetector.h</in>
+            </df>
+            <df name="Hello_CircuitPlayground">
+              <df name="Hello_Accelerometer">
+              </df>
+              <df name="Hello_Blink">
+              </df>
+              <df name="Hello_Buttons">
+              </df>
+              <df name="Hello_LightSensor">
+              </df>
+              <df name="Hello_NeoPixels">
+              </df>
+              <df name="Hello_SlideSwitch">
+              </df>
+              <df name="Hello_SoundSensor">
+              </df>
+              <df name="Hello_Speaker">
+              </df>
+              <df name="Hello_Temperature">
+              </df>
+            </df>
+            <df name="Infrared_NeoPixel">
+              <in>adafruit_mini_codes.h</in>
+            </df>
+            <df name="Infrared_Read">
+            </df>
+            <df name="Infrared_Record">
+            </df>
+            <df name="Infrared_Testpattern">
+            </df>
+            <df name="mega_demo">
+              <in>CapTouchDemo.h</in>
+              <in>Demo.h</in>
+              <in>RainbowCycleDemo.h</in>
+              <in>SensorDemo.h</in>
+              <in>TiltDemo.h</in>
+              <in>VUMeterDemo.h</in>
+            </df>
+            <df name="Microphone">
+              <df name="mic_fft">
+              </df>
+              <df name="mic_meter">
+              </df>
+            </df>
+            <df name="ScatchSensorBoard">
+            </df>
+            <df name="Speech">
+              <df name="Talk_UK_Acorn">
+              </df>
+              <df name="Talk_US_Clock">
+              </df>
+              <df name="Talk_US_Large">
+              </df>
+              <df name="Talk_US_Male">
+              </df>
+              <df name="Talk_US_TI99">
+              </df>
+            </df>
+            <df name="vu_meter">
+            </df>
+          </df>
+          <df name="utility">
+            <in>Adafruit_CPlay_LIS3DH.cpp</in>
+            <in>Adafruit_CPlay_LIS3DH.h</in>
+            <in>Adafruit_CPlay_Mic.cpp</in>
+            <in>Adafruit_CPlay_Mic.h</in>
+            <in>Adafruit_CPlay_NeoPixel.cpp</in>
+            <in>Adafruit_CPlay_NeoPixel.h</in>
+            <in>Adafruit_CPlay_Sensor.h</in>
+            <in>Adafruit_CPlay_Speaker.cpp</in>
+            <in>Adafruit_CPlay_Speaker.h</in>
+            <in>CP_Boards.h</in>
+            <in>CP_Firmata.cpp</in>
+            <in>CP_Firmata.h</in>
+            <in>CPlay_CapacitiveSensor.cpp</in>
+            <in>CPlay_CapacitiveSensor.h</in>
+            <in>IRLibCPE.h</in>
+            <in>IRLibCombo.h</in>
+            <in>IRLibDecodeBase.cpp</in>
+            <in>IRLibDecodeBase.h</in>
+            <in>IRLibGlobals.h</in>
+            <in>IRLibHardware.cpp</in>
+            <in>IRLibHardware.h</in>
+            <in>IRLibProtocols.cpp</in>
+            <in>IRLibProtocols.h</in>
+            <in>IRLibRecvBase.cpp</in>
+            <in>IRLibRecvBase.h</in>
+            <in>IRLibRecvPCI.cpp</in>
+            <in>IRLibRecvPCI.h</in>
+            <in>IRLibSAMD21.cpp</in>
+            <in>IRLibSAMD21.h</in>
+            <in>IRLibSendBase.cpp</in>
+            <in>IRLibSendBase.h</in>
+            <in>IRLib_HashRaw.h</in>
+            <in>IRLib_P01_NEC.h</in>
+            <in>IRLib_P02_Sony.h</in>
+            <in>IRLib_P03_RC5.h</in>
+            <in>IRLib_P04_RC6.h</in>
+            <in>IRLib_P05_Panasonic_Old.h</in>
+            <in>IRLib_P06_JVC.h</in>
+            <in>IRLib_P07_NECx.h</in>
+            <in>IRLib_P08_Samsung36.h</in>
+            <in>IRLib_P09_GICable.h</in>
+            <in>IRLib_P10_DirecTV.h</in>
+            <in>IRLib_P11_RCMM.h</in>
+            <in>IRLib_P12_CYKM.h</in>
+            <in>IRLib_P99_Additional.h</in>
+            <in>ffft.S</in>
+            <in>talkie.cpp</in>
+          </df>
+          <in>Adafruit_CircuitPlayground.cpp</in>
+          <in>Adafruit_CircuitPlayground.h</in>
+        </df>
+        <df name="Adafruit_FRAM_SPI">
+          <df name="examples">
+            <df name="MB85RS64V">
+            </df>
+          </df>
+          <in>Adafruit_FRAM_SPI.cpp</in>
+          <in>Adafruit_FRAM_SPI.h</in>
+        </df>
+        <df name="Arduino_Uno_WiFi_Dev_Ed_Library">
+          <df name="examples">
+            <df name="MqttPub">
+            </df>
+            <df name="MqttSub">
+            </df>
+            <df name="RestClient">
+            </df>
+            <df name="RestServer">
+            </df>
+            <df name="Tools">
+              <df name="EspRecovery">
+              </df>
+              <df name="ReadMacAddress">
+              </df>
+              <df name="Wifi2Serial">
+              </df>
+            </df>
+            <df name="WebServer">
+            </df>
+            <df name="WebServerBlink">
+            </df>
+          </df>
+          <df name="src">
+            <df name="lib">
+              <in>CiaoData.h</in>
+              <in>FP.cpp</in>
+              <in>FP.h</in>
+              <in>SC16IS750.cpp</in>
+              <in>SC16IS750.h</in>
+              <in>crc16.c</in>
+              <in>crc16.h</in>
+              <in>espduino.cpp</in>
+              <in>espduino.h</in>
+              <in>mqtt.cpp</in>
+              <in>mqtt.h</in>
+              <in>rest.cpp</in>
+              <in>rest.h</in>
+              <in>ringbuf.c</in>
+              <in>ringbuf.h</in>
+            </df>
+            <in>UnoWiFiDevEd.cpp</in>
+            <in>UnoWiFiDevEd.h</in>
+          </df>
+        </df>
+        <df name="IRremote">
+          <df name="examples">
+            <df name="AiwaRCT501SendDemo">
+            </df>
+            <df name="IRrecord">
+            </df>
+            <df name="IRrecvDemo">
+            </df>
+            <df name="IRrecvDump">
+            </df>
+            <df name="IRrecvDumpV2">
+            </df>
+            <df name="IRrelay">
+            </df>
+            <df name="IRremoteInfo">
+            </df>
+            <df name="IRsendDemo">
+            </df>
+            <df name="IRsendRawDemo">
+            </df>
+            <df name="IRtest">
+            </df>
+            <df name="IRtest2">
+            </df>
+            <df name="JVCPanasonicSendDemo">
+            </df>
+            <df name="LGACSendDemo">
+            </df>
+          </df>
+          <in>IRremote.cpp</in>
+          <in>IRremote.h</in>
+          <in>IRremoteInt.h</in>
+          <in>irPronto.cpp</in>
+          <in>irRecv.cpp</in>
+          <in>irSend.cpp</in>
+          <in>ir_Aiwa.cpp</in>
+          <in>ir_Denon.cpp</in>
+          <in>ir_Dish.cpp</in>
+          <in>ir_JVC.cpp</in>
+          <in>ir_LG.cpp</in>
+          <in>ir_Mitsubishi.cpp</in>
+          <in>ir_NEC.cpp</in>
+          <in>ir_Panasonic.cpp</in>
+          <in>ir_RC5_RC6.cpp</in>
+          <in>ir_Samsung.cpp</in>
+          <in>ir_Sanyo.cpp</in>
+          <in>ir_Sharp.cpp</in>
+          <in>ir_Sony.cpp</in>
+          <in>ir_Template.cpp</in>
+          <in>ir_Whynter.cpp</in>
+        </df>
+        <df name="LEDStripDriver">
+          <df name="examples">
+            <df name="DemoForWhiteLEDStrip">
+            </df>
+            <df name="DualLEDStrip">
+            </df>
+            <df name="SingleLEDStrip">
+            </df>
+          </df>
+          <in>RGBdriver.cpp</in>
+          <in>RGBdriver.h</in>
+        </df>
+        <df name="Zchaos">
+          <in>Zchaos.h</in>
+        </df>
+        <df name="Zcommand">
+          <in>Zcommand.cpp</in>
+          <in>Zcommand.h</in>
+        </df>
+        <df name="Zir">
+          <in>Zir.cpp</in>
+          <in>Zir.h</in>
+        </df>
+        <df name="Zledcontroller">
+          <in>Zledcontroller.cpp</in>
+          <in>Zledcontroller.h</in>
+        </df>
+        <df name="Zsmonoff">
+          <in>Zsmonoff.cpp</in>
+          <in>Zsmonoff.h</in>
+        </df>
+        <df name="Zwifi">
+          <in>Zwifi.cpp</in>
+          <in>Zwifi.h</in>
+        </df>
+      </df>
+      <df name="livingroom">
+        <in>declare.h</in>
+      </df>
+      <df name="motion_detection">
+      </df>
+      <df name="Roziroom">
+        <df name="Roziroom.ino">
+        </df>
+      </df>
+      <df name="test">
+        <df name="test">
+        </df>
+      </df>
+      <df name="test2">
+      </df>
+      <df name="test3">
+      </df>
+      <df name="test4">
+      </df>
+      <df name="test5">
+      </df>
+      <df name="test6">
+      </df>
+      <df name="test7_dimmerClass">
+      </df>
+      <df name="touch">
+      </df>
+    </df>
+  </logicalFolder>
+  <projectmakefile></projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <platform>2</platform>
+      </toolsSet>
+      <compile>
+        <compiledirpicklist>
+          <compiledirpicklistitem>.</compiledirpicklistitem>
+          <compiledirpicklistitem>${AUTO_FOLDER}</compiledirpicklistitem>
+        </compiledirpicklist>
+        <compiledir>${AUTO_FOLDER}</compiledir>
+        <compilecommandpicklist>
+          <compilecommandpicklistitem>${MAKE} ${ITEM_NAME}.o</compilecommandpicklistitem>
+          <compilecommandpicklistitem>${AUTO_COMPILE}</compilecommandpicklistitem>
+        </compilecommandpicklist>
+        <compilecommand>${AUTO_COMPILE}</compilecommand>
+      </compile>
+      <dbx_gdbdebugger version="1">
+        <gdb_pathmaps>
+        </gdb_pathmaps>
+        <gdb_interceptlist>
+          <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
+        </gdb_interceptlist>
+        <gdb_options>
+          <DebugOptions>
+          </DebugOptions>
+        </gdb_options>
+        <gdb_buildfirst gdb_buildfirst_overriden="false" gdb_buildfirst_old="false"/>
+      </dbx_gdbdebugger>
+      <nativedebugger version="1">
+        <engine>gdb</engine>
+      </nativedebugger>
+      <runprofile version="9">
+        <runcommandpicklist>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
+        </runcommandpicklist>
+        <runcommand>"${OUTPUT_PATH}"</runcommand>
+        <rundir>.</rundir>
+        <buildfirst>false</buildfirst>
+        <terminal-type>0</terminal-type>
+        <remove-instrumentation>0</remove-instrumentation>
+        <environment>
+        </environment>
+      </runprofile>
+    </conf>
+  </confs>
+</configurationDescriptor>

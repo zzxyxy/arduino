@@ -24,12 +24,18 @@
 #include "RGBdriver.h"
 #include "Zir.h"
 #include "Zchaos.h"
+#include "Zserial.h"
 #define CLK 2//pins definitions for the driver        
 #define DIO 3
 #define STEP 5
 
+#define POWERBTNPIN 10
+#define PLUSBTNPIN 11
+#define MINUSBTNPIN 12
+
 RGBdriver Driver(CLK,DIO);
 
+Zserial zser;
 Zir ir(4);
 int g_r = 0;
 int g_g = 0;
@@ -44,14 +50,6 @@ bool is_led_on() {
 
 void setupLed(int r ,int g, int b) 
 {
-#ifdef ZDEBUG
-  Serial.print("set led to ");
-  Serial.print(r);
-  Serial.print(" ");
-  Serial.print(g);
-  Serial.print(" ");
-  Serial.println(b);
-#endif
   Driver.begin(); // begin
   Driver.SetColor(b, r, g); //Red. first node data
   Driver.end();
@@ -68,14 +66,6 @@ void set_adjust_deadline() {
 
 void setupLed() 
 {
-#ifdef ZDEBUG
-  Serial.print("set led to ");
-  Serial.print(g_r);
-  Serial.print(" ");
-  Serial.print(g_g);
-  Serial.print(" ");
-  Serial.println(g_b);
-#endif
   Driver.begin(); // begin
   Driver.SetColor(g_b, g_r, g_g); //Red. first node data
   Driver.end();
@@ -123,6 +113,11 @@ void make_lamp_weaker(bool tmp)
 }
 
 
+void make_lamp_weaker2(long tmp)
+{
+  make_all_lamp_weaker(true);
+}
+
 void make_color_lamp_stronger(int *color)
 {
   *color = *color + STEP;
@@ -142,6 +137,8 @@ void make_all_lamp_stronger(bool tmp)
   if (g_b > 255) g_b = 255;
   setupLed();
 }
+
+
 
 
 void make_lamp_stronger(bool tmp)
@@ -164,12 +161,21 @@ void make_lamp_stronger(bool tmp)
 }
 
 
+void make_lamp_stronger2(long tmp)
+{
+  make_all_lamp_stronger(true);
+}
 
 
 void switch_lamp(bool x) {
-  Serial.println(is_led_on());
   if (is_led_on()) setupLed(0,0,0);
   else setupLed(255,255,255);
+}
+
+
+void switch_lamp2(long)
+{
+  switch_lamp(true);
 }
 
 
@@ -220,36 +226,75 @@ void set_to_blue(bool _tmp)
 }
 
 
+void setLamp(long x)
+{
+  Serial.println(x);
+  g_r = x;
+  g_g = x;
+  g_b = x;
+  if (g_r > 255) g_r = 255;
+  if (g_g > 255) g_g = 255;
+  if (g_b > 255) g_b = 255;
+  setupLed();
+}
+
+bool button_lock = false;
+unsigned long buttontimer = 0;
+
 void setup()  
 { 
-  Serial.begin(9600);
+  zser.setup();
   ir.setup();
   setupLed(0,0,0);
 
+  pinMode(POWERBTNPIN, INPUT);
+  pinMode(PLUSBTNPIN, INPUT);
+  pinMode(MINUSBTNPIN, INPUT);
+
+
+  zser.registerCommand(COMMAND_POWER_SWITCH, switch_lamp2);
+  zser.registerCommand(COMMAND_PLUS, make_lamp_stronger2);
+  zser.registerCommand(COMMAND_MINUS, make_lamp_weaker2);
+  zser.registerCommand(COMMAND_SET1, setLamp);
+  
   ir.registerHandler(IR_REMOTE_CODE_POWER, switch_lamp, false);
   ir.registerHandler(IR_REMOTE_CODE_VOL_DOWN, make_lamp_weaker, true);
   ir.registerHandler(IR_REMOTE_CODE_VOL_UP, make_lamp_stronger, true);
   ir.registerHandler(IR_REMOTE_CODE_1, set_to_red, false);
   ir.registerHandler(IR_REMOTE_CODE_2, set_to_green, false);
   ir.registerHandler(IR_REMOTE_CODE_3, set_to_blue, false);
-
-  Serial.println("Start");
 }  
+
 
 
 void loop()  
 { 
+  if (buttontimer + 100 < millis() )
+  if (digitalRead(POWERBTNPIN)) {
+    switch_lamp(false);
+    button_lock = true;
+    buttontimer = millis();
+  } else
+  if (digitalRead(PLUSBTNPIN)) {
+    make_lamp_stronger(false);
+    button_lock = true;
+    buttontimer = millis();
+  } else
+  if (digitalRead(MINUSBTNPIN)) {
+    make_lamp_weaker(false);
+    button_lock = true;
+    buttontimer = millis();
+  } else {
+    button_lock = false;
+  }
+  
+  
   ir.loop();
-
+  zser.loop();
   if (0 < adjust_deadline) {
     if (millis() > adjust_deadline) {
-#ifdef ZDEBUG
-      Serial.println("time is up");
-#endif
       adjust_state = ADJUST_ALL;
       adjust_deadline = 0;
-    }
-    
+    } 
   }
-
 }

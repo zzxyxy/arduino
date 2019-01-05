@@ -18,6 +18,7 @@ public:
   void switching();
   void on();
   void off();
+  State getState();
 private:
   State m_state = OFF;
   const int m_pin;

@@ -26,7 +26,7 @@ void Zir::loop()
 		} else {
 			m_pressedtimestamp = millis();
 		}
-#ifdef DEBUG
+#ifdef ZDEBUG
     Serial.print("IR recived on pin (");
     Serial.print(m_pin);
     Serial.print(") :"); 
@@ -42,7 +42,6 @@ void Zir::loop()
 				run(m_results.value, m_again, false);
 
 			} else {
-        Serial.print("x");
 				run(m_results.value, m_again, true);
 			}			
 		
@@ -69,7 +68,7 @@ void Zir::run(unsigned long code, bool again, bool _long)
 }
 
 
-void Zir::registerHandler(unsigned long code, void (*f)(), bool continguous) 
+void Zir::registerHandler(unsigned long code, void (*f)(bool), bool continguous) 
 {
   m_list[m_regCounter].code = code;
   m_list[m_regCounter].f = &(*f);

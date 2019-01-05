@@ -7,7 +7,7 @@ public:
   Zir(int pin);
   virtual ~Zir();
   void loop();
-  void registerHandler(unsigned long code, void (*f)(), bool continguous = false);
+  void registerHandler(unsigned long code, void (*f)(bool), bool continguous = false);
   void run(unsigned long code, bool again, bool _long = false);
   void setup();
 
