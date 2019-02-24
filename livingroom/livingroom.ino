@@ -1,79 +1,128 @@
-#include <Zchaos.h>
-#include <Zir.h>
-// #include <Zcommand.h>
-#include <Zsmonoff.h>
-#include "Zledcontroller.h"
+#include <Adafruit_PWMServoDriver.h>
 
-#define IRREC     3
-#define LAMP1     7    
-#define LAMP2     5    
-#define PRINTER1  6    
-#define LAMP1DIMM 9
+#include "Zir.h"
+#include "Zchaos.h"
+#include "Zsmonoff.h"
+#include "Zserial.h"
 
-Zir ir(IRREC);
-// Zcommand command;
-Zsmonoff lamp2(LAMP2);
-Zsmonoff printer1(PRINTER1);
-int dimpos = 0;
+Adafruit_PWMServoDriver dim = Adafruit_PWMServoDriver();
+Zir ir(4);
+Zserial zser;
+Zsmonoff relay1(6);
+Zsmonoff relay2(7);
+Zsmonoff relay3(8);
+Zsmonoff relay4(9);
 
-Zledcontroller led(LAMP1DIMM ,LAMP1);
+int dimstate = 0;
 
-void vol_up(bool _long)    
+
+void restartraspb()
 {
-  if (dimpos < dim_steps_size) dimpos ++;
-  led.set(dim_steps[dimpos]);
+  relay4.on();
+  delay(3000);
+  relay4.off();
 }
 
 
-void vol_down(bool _long)    
+void setdim(int newd)
 {
-  if (dimpos > 0) dimpos--;
-  led.set(dim_steps[dimpos]);
+  if ((dimstate == 0) && (newd > 0)) {
+    relay1.on();
+  }
+  if ((dimstate > 0) && (newd == 0)) {
+    relay1.off();
+  }
+  dim.setPWM(0, 0, newd);   
+  dimstate = newd;
 }
 
 
-void lamp1switch(bool _long)    
-{ 
-  if (Zledcontroller::State::ON  == led.getState()) dimpos = 0; 
-  if (Zledcontroller::State::OFF == led.getState()) dimpos = dim_steps_size; 
-  led.set(dim_steps[dimpos]);
+
+void dim_up() 
+{
+  if (dimstate == 0) {
+    setdim(1);
+    return;
+  }
+
+  if (dimstate < 5) {
+    setdim(dimstate+1); 
+  }
+  const int newstate = (int) ((double) dimstate * 1.2d);
+  if (newstate > 4095) { 
+    setdim(4095);
+    return;
+  }
+  setdim(newstate);
 }
 
 
-void lamp2switch(bool _long)    { lamp2.switching(); }
-void printer1switch(bool _long) { printer1.switching(); }
-void eventPower(bool _long)     { lamp1switch(_long ); }
-void lamp1on(bool _long)    { led.set(255); }
-void lamp2on(bool _long)    { lamp2.on(); }
-void printer1on(bool _long) { printer1.on(); }
-void lamp1off(bool _long)    { led.set(0); }
-void lamp2off(bool _long)    { lamp2.off(); }
-void printer1off(bool _long) { printer1.off(); }
+void dim_down() 
+{
+  if (dimstate < 5) {
+    setdim(dimstate-1); 
+  }
+  const int newstate = (int) ((double) dimstate * .8d);
+  if (newstate < 2) { 
+    setdim(0);
+    return;
+  }
+  setdim(newstate);
+}
+
+
+void ledwallswitch()
+{
+  if (relay1.getState() == Zsmonoff::State::ON)
+  {
+    setdim(0);
+  } else {
+    setdim(4095);
+  }
+}
+
+
+void balllampswitch()
+{
+  relay3.switching();
+}
 
 
 void setup() 
 {
-  Serial.begin(9600);
-  Serial.println("Start");
+
+  dim.begin();
+  dim.setPWMFreq(120);  // Analog servos run at ~60 Hz updates
+
+  zser.setup();
+  relay1.setup();
+  relay2.setup();
+  relay3.setup();
+  relay4.setup();
   ir.setup();
-  printer1.setup();
-  led.setup();
-  pinMode(LAMP1, OUTPUT);
-  ir.registerHandler(IR_REMOTE_CODE_VOL_UP, vol_up, true);
-  ir.registerHandler(IR_REMOTE_CODE_VOL_DOWN, vol_down, true);
-  ir.registerHandler(IR_REMOTE_CODE_POWER, eventPower, false);
-  ir.registerHandler(IR_REMOTE_CODE_1, lamp1switch, false);
-  ir.registerHandler(16718055, lamp2switch, false);
-  ir.registerHandler(16732845, printer1switch, false);
-  ir.registerHandler(1099325599, lamp1switch, false);
-  ir.registerHandler(49872     , lamp2switch, false);
-  digitalWrite(LAMP1, LOW);
 
+  ir.registerHandler(IR_REMOTE_CODE_POWER, ledwallswitch, false);
+  ir.registerHandler(IR_REMOTE_ER_POWER_TV, ledwallswitch, false);
+  ir.registerHandler(IR_REMOTE_CODE_1, ledwallswitch, false);
+  ir.registerHandler(IR_REMOTE_CODE_2, balllampswitch, false);
+  ir.registerHandler(IR_REMOTE_CODE_9, restartraspb, false);
+  ir.registerHandler(IR_REMOTE_ER_POWER_STB, balllampswitch, false);
+
+  ir.registerHandler(IR_REMOTE_CODE_VOL_UP, dim_up, true);
+  ir.registerHandler(IR_REMOTE_CODE_VOL_DOWN, dim_down, true);
+
+  ir.registerHandler(IR_REMOTE_ER_TV_VOL_UP, dim_up, true);
+  ir.registerHandler(IR_REMOTE_ER_TV_VOL_DOWN, dim_down, true);
+
+  zser.registerCommand(COMMAND_POWER_SWITCH, ledwallswitch);
+  zser.registerCommand(COMMAND_SET1, ledwallswitch);
+  zser.registerCommand(COMMAND_SET2, balllampswitch);
+
+   
 }
-
 
 void loop() 
 {
   ir.loop();
-  led.loop();
+  zser.loop();
 }
