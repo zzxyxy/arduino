@@ -1,22 +1,39 @@
-#include <ESP8266WiFi.h>
+#include "EspMQTTClient.h"
+#include "ArduinoJson.h"
+#define LED 4
 
-void setup()
+
+EspMQTTClient client(
+  "zxyxy",
+  "kaiserschmarrn",
+  "172.20.1.1",  // MQTT Broker server ip
+  "TestClient"      // Client name that uniquely identify your device
+);
+
+
+void setup() 
 {
   Serial.begin(9600);
-  Serial.println();
-
-  WiFi.begin("zxyxy", "kaiserschmarrn");
-
-  Serial.print("Connecting");
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println();
-
-  Serial.print("Connected, IP address: ");
-  Serial.println(WiFi.localIP());
+  pinMode(LED, OUTPUT);
+  digitalWrite(LED, HIGH);
 }
 
-void loop() {}
+
+void onConnectionEstablished() {
+  String cw;
+
+  client.subscribe("my", [] (const String &payload)  {
+    Serial.println(payload);
+  });
+
+  StaticJsonDocument<200> doc;
+  doc["title"] = "test title";
+  doc["test"] = 42;
+  serializeJson(doc, cw);
+
+  client.publish("test", cw);
+}
+
+void loop() {
+  client.loop();
+}
