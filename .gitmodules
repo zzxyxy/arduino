@@ -4,3 +4,6 @@
 [submodule "Zchaos"]
 	path = Zchaos
 	url = ssh://172.20.0.2:/git/zchaos
+[submodule "hardware/espressif/esp32"]
+	path = hardware/espressif/esp32
+	url = https://github.com/espressif/arduino-esp32.git
