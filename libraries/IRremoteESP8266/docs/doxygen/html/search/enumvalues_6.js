@@ -1,11 +1,9 @@
 var searchData=
 [
-  ['haier_5fac_7350',['HAIER_AC',['../IRremoteESP8266_8h.html#ad5b287a488a8c1b7b8661f029ab56fada1f232bcdf330ec2e353196941b9f1628',1,'IRremoteESP8266.h']]],
-  ['haier_5fac_5fyrw02_7351',['HAIER_AC_YRW02',['../IRremoteESP8266_8h.html#ad5b287a488a8c1b7b8661f029ab56fadaacda5821835865551f6df46c76282fa4',1,'IRremoteESP8266.h']]],
-  ['hitachi_5fac_7352',['HITACHI_AC',['../IRremoteESP8266_8h.html#ad5b287a488a8c1b7b8661f029ab56fada9020fb54ac69d8aec0185f7e80c962ca',1,'IRremoteESP8266.h']]],
-  ['hitachi_5fac1_7353',['HITACHI_AC1',['../IRremoteESP8266_8h.html#ad5b287a488a8c1b7b8661f029ab56fada7d9a74161d95e62bece3c0e48900cb35',1,'IRremoteESP8266.h']]],
-  ['hitachi_5fac2_7354',['HITACHI_AC2',['../IRremoteESP8266_8h.html#ad5b287a488a8c1b7b8661f029ab56fadab5a44068d519506efa8a3113aa44c9c0',1,'IRremoteESP8266.h']]],
-  ['hitachi_5fac3_7355',['HITACHI_AC3',['../IRremoteESP8266_8h.html#ad5b287a488a8c1b7b8661f029ab56fadac3487c47b14da6af922f5b27992b30f3',1,'IRremoteESP8266.h']]],
-  ['hitachi_5fac344_7356',['HITACHI_AC344',['../IRremoteESP8266_8h.html#ad5b287a488a8c1b7b8661f029ab56fada1e147eb39adc40e4181940cc2357f070',1,'IRremoteESP8266.h']]],
-  ['hitachi_5fac424_7357',['HITACHI_AC424',['../IRremoteESP8266_8h.html#ad5b287a488a8c1b7b8661f029ab56fada85af068f8964d4359512265d8cc27a31',1,'IRremoteESP8266.h']]]
+  ['ge6711ar2853m_8361',['GE6711AR2853M',['../IRsend_8h.html#a50c54713e16502d280723334879dc83bada534bddbb58907faa6c7eae385ec790',1,'IRsend.h']]],
+  ['gicable_8362',['GICABLE',['../IRremoteESP8266_8h.html#ad5b287a488a8c1b7b8661f029ab56fadac8f9010b746a07a7a6329d1b336b68cf',1,'IRremoteESP8266.h']]],
+  ['globalcache_8363',['GLOBALCACHE',['../IRremoteESP8266_8h.html#ad5b287a488a8c1b7b8661f029ab56fadaf8c11b983768907fdb625ff9fb3729d2',1,'IRremoteESP8266.h']]],
+  ['goodweather_8364',['GOODWEATHER',['../IRremoteESP8266_8h.html#ad5b287a488a8c1b7b8661f029ab56fada9e8d893590b745f6b1b5ffcb556d9cba',1,'IRremoteESP8266.h']]],
+  ['gree_8365',['GREE',['../IRremoteESP8266_8h.html#ad5b287a488a8c1b7b8661f029ab56fadae3a5e7c315f6f88b34a4c856f280ed83',1,'IRremoteESP8266.h']]],
+  ['gz055be1_8366',['GZ055BE1',['../IRsend_8h.html#a3a3ca37af46bf2f69ec66fef91b5115fa5f0552c128f2fc94924c3d712cdb8428',1,'IRsend.h']]]
 ];

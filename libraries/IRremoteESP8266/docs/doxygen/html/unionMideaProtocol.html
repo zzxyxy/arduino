@@ -69,6 +69,9 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 
+<p>Native representation of a Midea A/C message.  
+ <a href="unionMideaProtocol.html#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="ir__Midea_8h_source.html">ir_Midea.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
@@ -76,37 +79,57 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a8d696bb16d652ef6d582014049be2bbb"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="unionMideaProtocol.html#a8d696bb16d652ef6d582014049be2bbb">remote_state</a></td></tr>
 <tr class="memdesc:a8d696bb16d652ef6d582014049be2bbb"><td class="mdescLeft">&#160;</td><td class="mdescRight">The state in native IR code form.  <a href="unionMideaProtocol.html#a8d696bb16d652ef6d582014049be2bbb">More...</a><br /></td></tr>
 <tr class="separator:a8d696bb16d652ef6d582014049be2bbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a79152b3a81e49dd7ef7bee4ec647c527"><td class="memItemLeft" >struct {</td></tr>
-<tr class="memitem:ac1893f5965520c9b54371438fe816c71"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#a3d4afe5411a769c48e8bfaa3a9e8e84c">Sum</a></td></tr>
-<tr class="separator:ac1893f5965520c9b54371438fe816c71"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac41b3165485a69c9d708a1a36aa5a06b"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#ab48c834ee5a37297d04e71e6e32468d2">__pad0__</a>:8</td></tr>
-<tr class="separator:ac41b3165485a69c9d708a1a36aa5a06b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abf47354dedf187d10c338cd84b01e8ff"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#a3351e3af6d3f214536e593c450fa0915">__pad1__</a>:8</td></tr>
-<tr class="separator:abf47354dedf187d10c338cd84b01e8ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aec148329cfc0fd87600def9fb9d5d66f"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#a4206c02c5cafe996c05d92beb7a7e8d6">Temp</a>:5</td></tr>
-<tr class="separator:aec148329cfc0fd87600def9fb9d5d66f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abcc6b7b0a036e9f071a27cba5c4e7a52"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#a1b1258107620bb83fd6356815242e19b">useFahrenheit</a>:1</td></tr>
-<tr class="separator:abcc6b7b0a036e9f071a27cba5c4e7a52"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a462176d5fe197922d88d2c62c312cdaf"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#ab638086cc0b8d25fba57278c7ba881cb">__pad2__</a>:0</td></tr>
-<tr class="separator:a462176d5fe197922d88d2c62c312cdaf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a111a35927317fa776588c4121fd05498"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#aa0255e9e1351d594b2e2c8c6f9698e1a">Mode</a>:3</td></tr>
-<tr class="separator:a111a35927317fa776588c4121fd05498"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abf9211d46d0d0fd1cca3cdb7e5607266"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#a04b0f344ec9b7cf2bdbd2c530b409fcb">Fan</a>:2</td></tr>
-<tr class="separator:abf9211d46d0d0fd1cca3cdb7e5607266"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a381e959363ed3aaf8ce52e31b394c368"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#ac0d1346479086522065ec71ea0b87ad2">__pad3__</a>:1</td></tr>
-<tr class="separator:a381e959363ed3aaf8ce52e31b394c368"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9f54fb7c079158f396e16a130bf27f59"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#aeea5e2520e4cd1773c1eddc8a84af2d3">Sleep</a>:1</td></tr>
-<tr class="separator:a9f54fb7c079158f396e16a130bf27f59"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6c4de6f5626d3abe04e8bec1d4b69b7b"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#a6b534bb5845c3c184ee43b87995cff32">Power</a>:1</td></tr>
-<tr class="separator:a6c4de6f5626d3abe04e8bec1d4b69b7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a7c0669977244fa293074dd9cd2c050"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#addde95b2535612df3ef2183998cf7ca6">__pad4__</a>:0</td></tr>
-<tr class="separator:a7a7c0669977244fa293074dd9cd2c050"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a79152b3a81e49dd7ef7bee4ec647c527"><td class="memItemLeft" valign="top">};&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
-<tr class="separator:a79152b3a81e49dd7ef7bee4ec647c527"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4f77fcd69ae58f9c4ce1a0617f661fb9"><td class="memItemLeft" >struct {</td></tr>
+<tr class="memitem:afa6fea0674138c2e33e6fdbf1b17dc31"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#a3d4afe5411a769c48e8bfaa3a9e8e84c">Sum</a></td></tr>
+<tr class="separator:afa6fea0674138c2e33e6fdbf1b17dc31"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:addb4f6eb424e2abfe29447b71c1641ed"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#a2ce21157e61749f4d1c3b14fd0b6cfe8">SensorTemp</a>:7</td></tr>
+<tr class="memdesc:addb4f6eb424e2abfe29447b71c1641ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Degrees or OnTimer.  <a href="structMideaProtocol_1_1_0d71.html#addb4f6eb424e2abfe29447b71c1641ed">More...</a><br /></td></tr>
+<tr class="separator:addb4f6eb424e2abfe29447b71c1641ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad7775457e535762e9d92114483bfa6ea"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#a20cc2079eae404c980cc75101b4a3116">disableSensor</a>:1</td></tr>
+<tr class="separator:ad7775457e535762e9d92114483bfa6ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85e24b7ec261495d3b2a0c7ab3b80ed4"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#ab48c834ee5a37297d04e71e6e32468d2">__pad0__</a>:1</td></tr>
+<tr class="separator:a85e24b7ec261495d3b2a0c7ab3b80ed4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a1b4ed21d922447d04293ae05370496"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#afd53c8223249e271fe48d03c67a74364">OffTimer</a>:6</td></tr>
+<tr class="memdesc:a6a1b4ed21d922447d04293ae05370496"><td class="mdescLeft">&#160;</td><td class="mdescRight">Nr of Half hours. Off is 0b111111.  <a href="structMideaProtocol_1_1_0d71.html#a6a1b4ed21d922447d04293ae05370496">More...</a><br /></td></tr>
+<tr class="separator:a6a1b4ed21d922447d04293ae05370496"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0b62f838f3ec434359d2447545fe1d7"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#a2a1d3b51765737427adb5dddcda84d60">BeepDisable</a>:1</td></tr>
+<tr class="memdesc:ad0b62f838f3ec434359d2447545fe1d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">0 = no beep in follow me messages, 1 = beep.  <a href="structMideaProtocol_1_1_0d71.html#ad0b62f838f3ec434359d2447545fe1d7">More...</a><br /></td></tr>
+<tr class="separator:ad0b62f838f3ec434359d2447545fe1d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a67395989d4f22bdb125001ca3d9ad9b8"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#a4206c02c5cafe996c05d92beb7a7e8d6">Temp</a>:5</td></tr>
+<tr class="separator:a67395989d4f22bdb125001ca3d9ad9b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8e494eb46ea826b45e1747630e59293f"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#a1b1258107620bb83fd6356815242e19b">useFahrenheit</a>:1</td></tr>
+<tr class="separator:a8e494eb46ea826b45e1747630e59293f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a98684a9dcf9bfecd0efce6fa98349313"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#a3351e3af6d3f214536e593c450fa0915">__pad1__</a>:0</td></tr>
+<tr class="separator:a98684a9dcf9bfecd0efce6fa98349313"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a17ec981dd749b63e8ee7a30b0442ac12"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#aa0255e9e1351d594b2e2c8c6f9698e1a">Mode</a>:3</td></tr>
+<tr class="separator:a17ec981dd749b63e8ee7a30b0442ac12"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a07456d1661099f5c2997363c59b1e671"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#a04b0f344ec9b7cf2bdbd2c530b409fcb">Fan</a>:2</td></tr>
+<tr class="separator:a07456d1661099f5c2997363c59b1e671"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae7e84fa0498fe6d9a10b66b3f0a222cd"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#ab638086cc0b8d25fba57278c7ba881cb">__pad2__</a>:1</td></tr>
+<tr class="memdesc:ae7e84fa0498fe6d9a10b66b3f0a222cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unknown, but set on <em>some</em> Pioneer System A/Cs.  <a href="structMideaProtocol_1_1_0d71.html#ae7e84fa0498fe6d9a10b66b3f0a222cd">More...</a><br /></td></tr>
+<tr class="separator:ae7e84fa0498fe6d9a10b66b3f0a222cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf6924d4b1fbdd60db952dafab256e04"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#aeea5e2520e4cd1773c1eddc8a84af2d3">Sleep</a>:1</td></tr>
+<tr class="separator:acf6924d4b1fbdd60db952dafab256e04"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a5c9d7d66ddbe6f3b5d74dbb75127a7"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#a6b534bb5845c3c184ee43b87995cff32">Power</a>:1</td></tr>
+<tr class="separator:a0a5c9d7d66ddbe6f3b5d74dbb75127a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a09efe781f059e379196a4525290874ca"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#ae6deb4675602e9d1be3f8a49c601cdce">Type</a>:3</td></tr>
+<tr class="memdesc:a09efe781f059e379196a4525290874ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Normal, Special, or FollowMe message type.  <a href="structMideaProtocol_1_1_0d71.html#a09efe781f059e379196a4525290874ca">More...</a><br /></td></tr>
+<tr class="separator:a09efe781f059e379196a4525290874ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad944eb7a9a1f156f94d1d579f22daf92"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="unionMideaProtocol.html#a892508b7b4cade91dd2e315b678f5f1b">Header</a>:5</td></tr>
+<tr class="memdesc:ad944eb7a9a1f156f94d1d579f22daf92"><td class="mdescLeft">&#160;</td><td class="mdescRight">Typically 0b10100.  <a href="structMideaProtocol_1_1_0d71.html#ad944eb7a9a1f156f94d1d579f22daf92">More...</a><br /></td></tr>
+<tr class="separator:ad944eb7a9a1f156f94d1d579f22daf92"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4f77fcd69ae58f9c4ce1a0617f661fb9"><td class="memItemLeft" valign="top">};&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+<tr class="separator:a4f77fcd69ae58f9c4ce1a0617f661fb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Member Data Documentation</h2>
-<a id="a79152b3a81e49dd7ef7bee4ec647c527"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a79152b3a81e49dd7ef7bee4ec647c527">&#9670;&nbsp;</a></span>@10</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Native representation of a Midea A/C message. </p>
+<dl class="section note"><dt>Note</dt><dd>Compile-time model specific overrides. Uncomment one of these if you have such a devices to better match your A/C. It changes some of the special commands/settings.</dd>
+<dd>
+Some Pioneer Systems have required a special bit to be set in order for the A/C unit to accept the message. We don't currently understand what this bit does. See the link for details of how to set this if needed. </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="https://github.com/crankyoldgit/IRremoteESP8266/issues/1342#issuecomment-733721085">https://github.com/crankyoldgit/IRremoteESP8266/issues/1342#issuecomment-733721085</a> </dd></dl>
+</div><h2 class="groupheader">Member Data Documentation</h2>
+<a id="a4f77fcd69ae58f9c4ce1a0617f661fb9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4f77fcd69ae58f9c4ce1a0617f661fb9">&#9670;&nbsp;</a></span>@72</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -159,30 +182,36 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Unknown, but set on <em>some</em> Pioneer System A/Cs. </p>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000003">Todo:</a></b></dt><dd>Find out what this bit controls. </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="https://github.com/crankyoldgit/IRremoteESP8266/issues/1342#issuecomment-733721085">https://github.com/crankyoldgit/IRremoteESP8266/issues/1342#issuecomment-733721085</a> </dd></dl>
+
 </div>
 </div>
-<a id="ac0d1346479086522065ec71ea0b87ad2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac0d1346479086522065ec71ea0b87ad2">&#9670;&nbsp;</a></span>__pad3__</h2>
+<a id="a2a1d3b51765737427adb5dddcda84d60"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2a1d3b51765737427adb5dddcda84d60">&#9670;&nbsp;</a></span>BeepDisable</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">uint8_t MideaProtocol::__pad3__</td>
+          <td class="memname">uint8_t MideaProtocol::BeepDisable</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
+<p>0 = no beep in follow me messages, 1 = beep. </p>
+
 </div>
 </div>
-<a id="addde95b2535612df3ef2183998cf7ca6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#addde95b2535612df3ef2183998cf7ca6">&#9670;&nbsp;</a></span>__pad4__</h2>
+<a id="a20cc2079eae404c980cc75101b4a3116"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a20cc2079eae404c980cc75101b4a3116">&#9670;&nbsp;</a></span>disableSensor</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">uint8_t MideaProtocol::__pad4__</td>
+          <td class="memname">uint8_t MideaProtocol::disableSensor</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -203,6 +232,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a892508b7b4cade91dd2e315b678f5f1b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a892508b7b4cade91dd2e315b678f5f1b">&#9670;&nbsp;</a></span>Header</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t MideaProtocol::Header</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Typically 0b10100. </p>
+
+</div>
+</div>
 <a id="aa0255e9e1351d594b2e2c8c6f9698e1a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa0255e9e1351d594b2e2c8c6f9698e1a">&#9670;&nbsp;</a></span>Mode</h2>
 
@@ -214,6 +259,22 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="afd53c8223249e271fe48d03c67a74364"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afd53c8223249e271fe48d03c67a74364">&#9670;&nbsp;</a></span>OffTimer</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t MideaProtocol::OffTimer</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Nr of Half hours. Off is 0b111111. </p>
 
 </div>
 </div>
@@ -244,6 +305,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>The state in native IR code form. </p>
+
+</div>
+</div>
+<a id="a2ce21157e61749f4d1c3b14fd0b6cfe8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2ce21157e61749f4d1c3b14fd0b6cfe8">&#9670;&nbsp;</a></span>SensorTemp</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t MideaProtocol::SensorTemp</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Degrees or OnTimer. </p>
 
 </div>
 </div>
@@ -286,6 +363,22 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="ae6deb4675602e9d1be3f8a49c601cdce"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae6deb4675602e9d1be3f8a49c601cdce">&#9670;&nbsp;</a></span>Type</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t MideaProtocol::Type</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Normal, Special, or FollowMe message type. </p>
 
 </div>
 </div>

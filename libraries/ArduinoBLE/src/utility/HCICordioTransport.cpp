@@ -17,12 +17,18 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifdef ARDUINO_ARCH_MBED
+#if defined(ARDUINO_ARCH_MBED) && !defined(TARGET_NANO_RP2040_CONNECT)
+
+#include <Arduino.h>
+#include <mbed.h>
 
 #include <driver/CordioHCITransportDriver.h>
 #include <driver/CordioHCIDriver.h>
 
-#include <mbed_config.h>
+#if defined(ARDUINO_PORTENTA_H7_M4) || defined(ARDUINO_PORTENTA_H7_M7) || defined(ARDUINO_NICLA_VISION)
+#include "ble/BLE.h"
+#include <events/mbed_events.h>
+#endif
 
 // Parts of this file are based on: https://github.com/ARMmbed/mbed-os-cordio-hci-passthrough/pull/2
 // With permission from the Arm Mbed team to re-license
@@ -41,35 +47,37 @@
 
 #include "HCICordioTransport.h"
 
-extern ble::vendor::cordio::CordioHCIDriver& ble_cordio_get_hci_driver();
+#if (MBED_VERSION > MBED_ENCODE_VERSION(6, 2, 0))
+#define BLE_NAMESPACE ble 
+#else
+#define BLE_NAMESPACE ble::vendor::cordio
+#endif
 
-namespace ble {
-  namespace vendor {
-    namespace cordio {
-      struct CordioHCIHook {
-          static CordioHCIDriver& getDriver() {
-              return ble_cordio_get_hci_driver();
-          }
+extern BLE_NAMESPACE::CordioHCIDriver& ble_cordio_get_hci_driver();
 
-          static CordioHCITransportDriver& getTransportDriver() {
-              return getDriver()._transport_driver;
-          }
-
-          static void setDataReceivedHandler(void (*handler)(uint8_t*, uint8_t)) {
-              getTransportDriver().set_data_received_handler(handler);
-          }
-      };
+namespace BLE_NAMESPACE {
+  struct CordioHCIHook {
+    static CordioHCIDriver& getDriver() {
+      return ble_cordio_get_hci_driver();
     }
-  }
+
+    static CordioHCITransportDriver& getTransportDriver() {
+      return getDriver()._transport_driver;
+    }
+
+    static void setDataReceivedHandler(void (*handler)(uint8_t*, uint8_t)) {
+      getTransportDriver().set_data_received_handler(handler);
+    }
+  };
 }
 
-using ble::vendor::cordio::CordioHCIHook;
+using BLE_NAMESPACE::CordioHCIHook;
 
 #if CORDIO_ZERO_COPY_HCI
 extern uint8_t *SystemHeapStart;
 extern uint32_t SystemHeapSize;
 
-void init_wsf(ble::vendor::cordio::buf_pool_desc_t& buf_pool_desc) {
+void init_wsf(BLE_NAMESPACE::buf_pool_desc_t& buf_pool_desc) {
     static bool init = false;
 
     if (init) {
@@ -103,20 +111,20 @@ extern "C" void wsf_mbed_ble_signal_event(void)
 }
 #endif //CORDIO_ZERO_COPY_HCI
 
-#define CORDIO_TRANSPORT_WSF_MS_PER_TICK 10
-
 static void bleLoop()
 {
 #if CORDIO_ZERO_COPY_HCI
     uint64_t last_update_us = 0;
     mbed::LowPowerTimer timer;
 
+    timer.start();
+
     while (true) {
         last_update_us += (uint64_t) timer.read_high_resolution_us();
         timer.reset();
 
         uint64_t last_update_ms = (last_update_us / 1000);
-        wsfTimerTicks_t wsf_ticks = (last_update_ms / CORDIO_TRANSPORT_WSF_MS_PER_TICK);
+        wsfTimerTicks_t wsf_ticks = (last_update_ms / WSF_MS_PER_TICK);
 
         if (wsf_ticks > 0) {
             WsfTimerUpdate(wsf_ticks);
@@ -137,9 +145,9 @@ static void bleLoop()
         uint64_t time_spent = (uint64_t) timer.read_high_resolution_us();
 
         /* don't bother sleeping if we're already past tick */
-        if (sleep && (CORDIO_TRANSPORT_WSF_MS_PER_TICK * 1000 > time_spent)) {
+        if (sleep && (WSF_MS_PER_TICK * 1000 > time_spent)) {
             /* sleep to maintain constant tick rate */
-            uint64_t wait_time_us = CORDIO_TRANSPORT_WSF_MS_PER_TICK * 1000 - time_spent;
+            uint64_t wait_time_us = WSF_MS_PER_TICK * 1000 - time_spent;
             uint64_t wait_time_ms = wait_time_us / 1000;
 
             wait_time_us = wait_time_us % 1000;
@@ -155,13 +163,13 @@ static void bleLoop()
     }
 #else
     while(true) {
-        rtos::Thread::wait(osWaitForever);
+        rtos::ThisThread::sleep_for(osWaitForever);
     }
 #endif // CORDIO_ZERO_COPY_HCI
 }
 
 static rtos::EventFlags bleEventFlags; 
-static rtos::Thread bleLoopThread;
+static rtos::Thread* bleLoopThread = NULL;
 
 
 HCICordioTransportClass::HCICordioTransportClass() :
@@ -173,17 +181,44 @@ HCICordioTransportClass::~HCICordioTransportClass()
 {
 }
 
+#if defined(ARDUINO_PORTENTA_H7_M4) || defined(ARDUINO_PORTENTA_H7_M7) || defined(ARDUINO_NICLA_VISION)
+events::EventQueue eventQueue(10 * EVENTS_EVENT_SIZE);
+void scheduleMbedBleEvents(BLE::OnEventsToProcessCallbackContext *context) {
+  eventQueue.call(mbed::Callback<void()>(&context->ble, &BLE::processEvents));
+}
+
+void completeCallback(BLE::InitializationCompleteCallbackContext *context) {
+  eventQueue.break_dispatch();
+}
+#endif
+
 int HCICordioTransportClass::begin()
 {
   _rxBuf.clear();
 
 #if CORDIO_ZERO_COPY_HCI
-  ble::vendor::cordio::buf_pool_desc_t bufPoolDesc = CordioHCIHook::getDriver().get_buffer_pool_description();
+  BLE_NAMESPACE::buf_pool_desc_t bufPoolDesc = CordioHCIHook::getDriver().get_buffer_pool_description();
   init_wsf(bufPoolDesc);
 #endif
 
+#if defined(ARDUINO_PORTENTA_H7_M4) || defined(ARDUINO_PORTENTA_H7_M7) || defined(ARDUINO_NICLA_VISION)
+  BLE &ble = BLE::Instance();
+  ble.onEventsToProcess(scheduleMbedBleEvents);
+
+  ble.init(completeCallback);
+  eventQueue.dispatch(10000);
+
+  if (!ble.hasInitialized()){
+    return 0;
+  } 
+#else 
   CordioHCIHook::getDriver().initialize();
-  bleLoopThread.start(bleLoop);
+#endif
+
+  if (bleLoopThread == NULL) {
+    bleLoopThread = new rtos::Thread();
+    bleLoopThread->start(bleLoop);
+  }
 
   CordioHCIHook::setDataReceivedHandler(HCICordioTransportClass::onDataReceived);
 
@@ -194,9 +229,15 @@ int HCICordioTransportClass::begin()
 
 void HCICordioTransportClass::end()
 {
-  bleLoopThread.terminate();
+  if (bleLoopThread != NULL) {
+    bleLoopThread->terminate();
+    delete bleLoopThread;
+    bleLoopThread = NULL;
+  }
 
+#if !defined(ARDUINO_PORTENTA_H7_M4) && !defined(ARDUINO_PORTENTA_H7_M7) && !defined(ARDUINO_NICLA_VISION)
   CordioHCIHook::getDriver().terminate();
+#endif
 
   _begun = false;
 }
@@ -242,7 +283,7 @@ size_t HCICordioTransportClass::write(const uint8_t* data, size_t length)
 
   return CordioHCIHook::getTransportDriver().write(packetType, packetLength, packet);
 #else
-  return CordioHCIHook::.getTransportDriver().write(packetType, packetLength, &data[1]);
+  return CordioHCIHook::getTransportDriver().write(packetType, packetLength, (uint8_t*)&data[1]);
 #endif
 }
 

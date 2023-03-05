@@ -1,5 +1,5 @@
-# ArduinoJson - arduinojson.org
-# Copyright Benoit Blanchon 2014-2020
+# ArduinoJson - https://arduinojson.org
+# Copyright © 2014-2022, Benoit BLANCHON
 # MIT License
 
 add_executable(IntegrationTests
@@ -16,5 +16,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 	)
 endif()
 
-target_link_libraries(IntegrationTests catch)
 add_test(IntegrationTests IntegrationTests)
+
+set_tests_properties(IntegrationTests
+	PROPERTIES
+		LABELS 		"Catch"
+)

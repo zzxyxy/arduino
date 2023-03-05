@@ -31,7 +31,11 @@ void setup() {
   Serial.begin(9600);
   
   Serial.println("TLC59711 test");
-  pinMode(10, OUTPUT);
+  
+  // Uncomment this line if using UNO/AVR since 10 has to be an output
+  // for hardware SPI to work
+  //pinMode(10, OUTPUT);
+
   tlc.begin();
   tlc.write();
 }
@@ -44,7 +48,7 @@ void loop() {
   colorWipe(0, 0, 65535, 100); // "Blue" (depending on your LED wiring)
   delay(200);
   
-  rainbowCycle(5);
+  increaseBrightness();
 }
 
 
@@ -54,6 +58,19 @@ void colorWipe(uint16_t r, uint16_t g, uint16_t b, uint8_t wait) {
       tlc.setLED(i, r, g, b);
       tlc.write();
       delay(wait);
+  }
+}
+ 
+// Rainbow all LEDs at the same time, same color
+void rainbow(uint8_t wait) {
+  uint32_t i, j;
+
+  for(j=0; j<65535; j+=10) {
+    for(i=0; i<4*NUM_TLC59711; i++) {
+      Wheel(i, (i+j) & 65535);
+    }
+    tlc.write();
+    delay(wait);
   }
 }
 
@@ -81,5 +98,18 @@ void Wheel(uint8_t ledn, uint16_t WheelPos) {
   } else {
     WheelPos -= 43690;
     tlc.setLED(ledn, 0, 3*WheelPos, 65535 - 3*WheelPos);
+  }
+}
+
+//All RGB Channels on full colour
+//Cycles trough all brightness settings from 0 up to 127
+void increaseBrightness(){
+  for(uint16_t i=0; i<8*NUM_TLC59711; i++) {
+      tlc.setLED(i, 65535, 65535, 65535);
+  }
+  for(int i = 0; i < 128; i++){
+    tlc.simpleSetBrightness(i);
+    tlc.write();
+    delay(1000);
   }
 }

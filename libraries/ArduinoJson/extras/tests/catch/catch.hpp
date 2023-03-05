@@ -1,6 +1,6 @@
 /*
- *  Catch v1.9.7
- *  Generated: 2017-08-10 23:49:15.233907
+ *  Catch v1.12.2
+ *  Generated: 2023-01-17 08:45:40.979381
  *  ----------------------------------------------------------
  *  This file has been merged from multiple headers. Please don't edit it directly
  *  Copyright (c) 2012 Two Blue Cubes Ltd. All rights reserved.
@@ -214,7 +214,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 // Use variadic macros if the compiler supports them
-#if ( defined _MSC_VER && _MSC_VER > 1400 && !defined __EDGE__) || \
+#if ( defined _MSC_VER && _MSC_VER >= 1400 && !defined __EDGE__) || \
     ( defined __WAVE__ && __WAVE_HAS_VARIADICS ) || \
     ( defined __GNUC__ && __GNUC__ >= 3 ) || \
     ( !defined __cplusplus && __STDC_VERSION__ >= 199901L || __cplusplus >= 201103L )
@@ -228,7 +228,12 @@
     ( defined __GNUC__  && ( __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3 )) ) || \
     ( defined __clang__ && __clang_major__ >= 3 )
 
-#define CATCH_INTERNAL_CONFIG_COUNTER
+// Use of __COUNTER__ is suppressed during code analysis in CLion/AppCode 2017.2.x and former,
+// because __COUNTER__ is not properly handled by it.
+// This does not affect compilation
+#if ( !defined __JETBRAINS_IDE__ || __JETBRAINS_IDE__ >= 20170300L )
+    #define CATCH_INTERNAL_CONFIG_COUNTER
+#endif
 
 #endif
 
@@ -309,10 +314,7 @@
 #if defined(CATCH_INTERNAL_CONFIG_CPP11_UNIQUE_PTR) && !defined(CATCH_CONFIG_CPP11_NO_UNIQUE_PTR) && !defined(CATCH_CONFIG_CPP11_UNIQUE_PTR) && !defined(CATCH_CONFIG_NO_CPP11)
 #   define CATCH_CONFIG_CPP11_UNIQUE_PTR
 #endif
-// Use of __COUNTER__ is suppressed if __JETBRAINS_IDE__ is #defined (meaning we're being parsed by a JetBrains IDE for
-// analytics) because, at time of writing, __COUNTER__ is not properly handled by it.
-// This does not affect compilation
-#if defined(CATCH_INTERNAL_CONFIG_COUNTER) && !defined(CATCH_CONFIG_NO_COUNTER) && !defined(CATCH_CONFIG_COUNTER) && !defined(__JETBRAINS_IDE__)
+#if defined(CATCH_INTERNAL_CONFIG_COUNTER) && !defined(CATCH_CONFIG_NO_COUNTER) && !defined(CATCH_CONFIG_COUNTER)
 #   define CATCH_CONFIG_COUNTER
 #endif
 #if defined(CATCH_INTERNAL_CONFIG_CPP11_SHUFFLE) && !defined(CATCH_CONFIG_CPP11_NO_SHUFFLE) && !defined(CATCH_CONFIG_CPP11_SHUFFLE) && !defined(CATCH_CONFIG_NO_CPP11)
@@ -1291,6 +1293,7 @@ namespace Catch {
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4389) // '==' : signed/unsigned mismatch
+#pragma warning(disable:4018) // more "signed/unsigned mismatch"
 #pragma warning(disable:4312) // Converting int to T* using reinterpret_cast (issue on x64 platform)
 #endif
 
@@ -2126,6 +2129,9 @@ namespace Catch{
         #define CATCH_TRAP() \
                 __asm__("li r0, 20\nsc\nnop\nli r0, 37\nli r4, 2\nsc\nnop\n" \
                 : : : "memory","r0","r3","r4" ) /* NOLINT */
+    #elif defined(__aarch64__)
+        // Backport of https://github.com/catchorg/Catch2/commit/a25c1a24af8bffd35727a888a307ff0280cf9387
+        #define CATCH_TRAP() __asm__(".inst 0xd4200000")
     #else
         #define CATCH_TRAP() __asm__("int $3\n" : : /* NOLINT */ )
     #endif
@@ -2166,6 +2172,12 @@ namespace Catch {
     };
 }
 
+#if !defined(CATCH_CONFIG_DISABLE_STRINGIFICATION)
+# define CATCH_INTERNAL_STRINGIFY(expr) #expr
+#else
+# define CATCH_INTERNAL_STRINGIFY(expr) "Disabled by CATCH_CONFIG_DISABLE_STRINGIFICATION"
+#endif
+
 #if defined(CATCH_CONFIG_FAST_COMPILE)
 ///////////////////////////////////////////////////////////////////////////////
 // We can speedup compilation significantly by breaking into debugger lower in
@@ -2181,7 +2193,7 @@ namespace Catch {
 // the exception before it propagates back up to the runner.
 #define INTERNAL_CATCH_TEST_NO_TRY( macroName, resultDisposition, expr ) \
     do { \
-        Catch::ResultBuilder __catchResult( macroName, CATCH_INTERNAL_LINEINFO, #expr, resultDisposition ); \
+        Catch::ResultBuilder __catchResult( macroName, CATCH_INTERNAL_LINEINFO, CATCH_INTERNAL_STRINGIFY(expr), resultDisposition ); \
         __catchResult.setExceptionGuard(); \
         CATCH_INTERNAL_SUPPRESS_PARENTHESES_WARNINGS \
         ( __catchResult <= expr ).endExpression(); \
@@ -2193,9 +2205,9 @@ namespace Catch {
 
 #define INTERNAL_CHECK_THAT_NO_TRY( macroName, matcher, resultDisposition, arg ) \
     do { \
-        Catch::ResultBuilder __catchResult( macroName, CATCH_INTERNAL_LINEINFO, #arg ", " #matcher, resultDisposition ); \
+        Catch::ResultBuilder __catchResult( macroName, CATCH_INTERNAL_LINEINFO, CATCH_INTERNAL_STRINGIFY(arg) ", " CATCH_INTERNAL_STRINGIFY(matcher), resultDisposition ); \
         __catchResult.setExceptionGuard(); \
-        __catchResult.captureMatch( arg, matcher, #matcher ); \
+        __catchResult.captureMatch( arg, matcher, CATCH_INTERNAL_STRINGIFY(matcher) ); \
         __catchResult.unsetExceptionGuard(); \
         INTERNAL_CATCH_REACT( __catchResult ) \
     } while( Catch::alwaysFalse() )
@@ -2214,7 +2226,7 @@ namespace Catch {
 ///////////////////////////////////////////////////////////////////////////////
 #define INTERNAL_CATCH_TEST( macroName, resultDisposition, expr ) \
     do { \
-        Catch::ResultBuilder __catchResult( macroName, CATCH_INTERNAL_LINEINFO, #expr, resultDisposition ); \
+        Catch::ResultBuilder __catchResult( macroName, CATCH_INTERNAL_LINEINFO, CATCH_INTERNAL_STRINGIFY(expr), resultDisposition ); \
         try { \
             CATCH_INTERNAL_SUPPRESS_PARENTHESES_WARNINGS \
             ( __catchResult <= expr ).endExpression(); \
@@ -2240,7 +2252,7 @@ namespace Catch {
 ///////////////////////////////////////////////////////////////////////////////
 #define INTERNAL_CATCH_NO_THROW( macroName, resultDisposition, expr ) \
     do { \
-        Catch::ResultBuilder __catchResult( macroName, CATCH_INTERNAL_LINEINFO, #expr, resultDisposition ); \
+        Catch::ResultBuilder __catchResult( macroName, CATCH_INTERNAL_LINEINFO, CATCH_INTERNAL_STRINGIFY(expr), resultDisposition ); \
         try { \
             static_cast<void>(expr); \
             __catchResult.captureResult( Catch::ResultWas::Ok ); \
@@ -2254,7 +2266,7 @@ namespace Catch {
 ///////////////////////////////////////////////////////////////////////////////
 #define INTERNAL_CATCH_THROWS( macroName, resultDisposition, matcher, expr ) \
     do { \
-        Catch::ResultBuilder __catchResult( macroName, CATCH_INTERNAL_LINEINFO, #expr, resultDisposition, #matcher ); \
+        Catch::ResultBuilder __catchResult( macroName, CATCH_INTERNAL_LINEINFO, CATCH_INTERNAL_STRINGIFY(expr), resultDisposition, CATCH_INTERNAL_STRINGIFY(matcher) ); \
         if( __catchResult.allowThrows() ) \
             try { \
                 static_cast<void>(expr); \
@@ -2271,7 +2283,7 @@ namespace Catch {
 ///////////////////////////////////////////////////////////////////////////////
 #define INTERNAL_CATCH_THROWS_AS( macroName, exceptionType, resultDisposition, expr ) \
     do { \
-        Catch::ResultBuilder __catchResult( macroName, CATCH_INTERNAL_LINEINFO, #expr ", " #exceptionType, resultDisposition ); \
+        Catch::ResultBuilder __catchResult( macroName, CATCH_INTERNAL_LINEINFO, CATCH_INTERNAL_STRINGIFY(expr) ", " CATCH_INTERNAL_STRINGIFY(exceptionType), resultDisposition ); \
         if( __catchResult.allowThrows() ) \
             try { \
                 static_cast<void>(expr); \
@@ -2314,9 +2326,9 @@ namespace Catch {
 ///////////////////////////////////////////////////////////////////////////////
 #define INTERNAL_CHECK_THAT( macroName, matcher, resultDisposition, arg ) \
     do { \
-        Catch::ResultBuilder __catchResult( macroName, CATCH_INTERNAL_LINEINFO, #arg ", " #matcher, resultDisposition ); \
+        Catch::ResultBuilder __catchResult( macroName, CATCH_INTERNAL_LINEINFO, CATCH_INTERNAL_STRINGIFY(arg) ", " CATCH_INTERNAL_STRINGIFY(matcher), resultDisposition ); \
         try { \
-            __catchResult.captureMatch( arg, matcher, #matcher ); \
+            __catchResult.captureMatch( arg, matcher, CATCH_INTERNAL_STRINGIFY(matcher) ); \
         } catch( ... ) { \
             __catchResult.useActiveException( resultDisposition | Catch::ResultDisposition::ContinueOnFailure ); \
         } \
@@ -2822,7 +2834,8 @@ namespace Detail {
             if (relativeOK) {
                 return true;
             }
-            return std::fabs(lhs_v - rhs.m_value) < rhs.m_margin;
+
+            return std::fabs(lhs_v - rhs.m_value) <= rhs.m_margin;
         }
 
         template <typename T, typename = typename std::enable_if<std::is_constructible<double, T>::value>::type>
@@ -2894,7 +2907,7 @@ namespace Detail {
             if (relativeOK) {
                 return true;
             }
-            return std::fabs(lhs - rhs.m_value) < rhs.m_margin;
+            return std::fabs(lhs - rhs.m_value) <= rhs.m_margin;
         }
 
         friend bool operator == ( Approx const& lhs, double rhs ) {
@@ -3852,6 +3865,12 @@ namespace Catch {
         Yes,
         No
     }; };
+    struct WaitForKeypress { enum When {
+        Never,
+        BeforeStart = 1,
+        BeforeExit = 2,
+        BeforeStartAndExit = BeforeStart | BeforeExit
+    }; };
 
     class TestSpec;
 
@@ -3965,13 +3984,15 @@ namespace Catch {
             showHelp( false ),
             showInvisibles( false ),
             filenamesAsTags( false ),
+            libIdentify( false ),
             abortAfter( -1 ),
             rngSeed( 0 ),
             verbosity( Verbosity::Normal ),
             warnings( WarnAbout::Nothing ),
             showDurations( ShowDurations::DefaultForReporter ),
             runOrder( RunTests::InDeclarationOrder ),
-            useColour( UseColour::Auto )
+            useColour( UseColour::Auto ),
+            waitForKeypress( WaitForKeypress::Never )
         {}
 
         bool listTests;
@@ -3986,6 +4007,7 @@ namespace Catch {
         bool showHelp;
         bool showInvisibles;
         bool filenamesAsTags;
+        bool libIdentify;
 
         int abortAfter;
         unsigned int rngSeed;
@@ -3995,6 +4017,7 @@ namespace Catch {
         ShowDurations::OrNot showDurations;
         RunTests::InWhatOrder runOrder;
         UseColour::YesOrNo useColour;
+        WaitForKeypress::When waitForKeypress;
 
         std::string outputFilename;
         std::string name;
@@ -5188,6 +5211,18 @@ namespace Catch {
         else
             throw std::runtime_error( "colour mode must be one of: auto, yes or no" );
     }
+    inline void setWaitForKeypress( ConfigData& config, std::string const& keypress ) {
+        std::string keypressLc = toLower( keypress );
+        if( keypressLc == "start" )
+            config.waitForKeypress = WaitForKeypress::BeforeStart;
+        else if( keypressLc == "exit" )
+            config.waitForKeypress = WaitForKeypress::BeforeExit;
+        else if( keypressLc == "both" )
+            config.waitForKeypress = WaitForKeypress::BeforeStartAndExit;
+        else
+            throw std::runtime_error( "keypress argument must be one of: start, exit or both. '" + keypress + "' not recognised" );
+    };
+
     inline void forceColour( ConfigData& config ) {
         config.useColour = UseColour::Yes;
     }
@@ -5322,6 +5357,14 @@ namespace Catch {
         cli["--use-colour"]
             .describe( "should output be colourised" )
             .bind( &setUseColour, "yes|no" );
+
+        cli["--libidentify"]
+            .describe( "report name and version according to libidentify standard" )
+            .bind( &ConfigData::libIdentify );
+
+        cli["--wait-for-keypress"]
+                .describe( "waits for a keypress before exiting" )
+                .bind( &setWaitForKeypress, "start|exit|both" );
 
         return cli;
     }
@@ -6352,18 +6395,21 @@ CATCH_INTERNAL_UNSUPPRESS_ETD_WARNINGS
 // #included from: catch_fatal_condition.hpp
 #define TWOBLUECUBES_CATCH_FATAL_CONDITION_H_INCLUDED
 
+#include <cassert>
+#include <stdexcept>
+
 namespace Catch {
 
-    // Report the error condition
-    inline void reportFatal( std::string const& message ) {
-        IContext& context = Catch::getCurrentContext();
-        IResultCapture* resultCapture = context.getResultCapture();
-        resultCapture->handleFatalErrorCondition( message );
-    }
+//! Signals fatal error message to the run context
+inline void reportFatal(std::string const &message) {
+  IContext &context = Catch::getCurrentContext();
+  IResultCapture *resultCapture = context.getResultCapture();
+  resultCapture->handleFatalErrorCondition(message);
+}
 
 } // namespace Catch
 
-#if defined ( CATCH_PLATFORM_WINDOWS ) /////////////////////////////////////////
+#if defined(CATCH_PLATFORM_WINDOWS) /////////////////////////////////////////
 // #included from: catch_windows_h_proxy.h
 
 #define TWOBLUECUBES_CATCH_WINDOWS_H_PROXY_H_INCLUDED
@@ -6389,176 +6435,308 @@ namespace Catch {
 #endif
 
 
-#  if !defined ( CATCH_CONFIG_WINDOWS_SEH )
+#if !defined(CATCH_CONFIG_WINDOWS_SEH)
 
 namespace Catch {
-    struct FatalConditionHandler {
-        void reset() {}
-    };
+class FatalConditionHandler {
+  bool m_started;
+
+  // Install/disengage implementation for specific platform.
+  // Should be if-defed to work on current platform, can assume
+  // engage-disengage 1:1 pairing.
+  void engage_platform() {}
+  void disengage_platform() {}
+
+public:
+  // Should also have platform-specific implementations as needed
+  FatalConditionHandler() : m_started(false) {}
+  ~FatalConditionHandler() {}
+
+  void engage() {
+    assert(!m_started && "Handler cannot be installed twice.");
+    m_started = true;
+    engage_platform();
+  }
+
+  void disengage() {
+    assert(m_started &&
+           "Handler cannot be uninstalled without being installed first");
+    m_started = false;
+    disengage_platform();
+  }
+};
+} // namespace Catch
+
+#else // CATCH_CONFIG_WINDOWS_SEH is defined
+
+namespace Catch {
+
+struct SignalDefs {
+  DWORD id;
+  const char *name;
+};
+extern SignalDefs signalDefs[];
+// There is no 1-1 mapping between signals and windows exceptions.
+// Windows can easily distinguish between SO and SigSegV,
+// but SigInt, SigTerm, etc are handled differently.
+SignalDefs signalDefs[] = {
+    {EXCEPTION_ILLEGAL_INSTRUCTION, "SIGILL - Illegal instruction signal"},
+    {EXCEPTION_STACK_OVERFLOW, "SIGSEGV - Stack overflow"},
+    {EXCEPTION_ACCESS_VIOLATION, "SIGSEGV - Segmentation violation signal"},
+    {EXCEPTION_INT_DIVIDE_BY_ZERO, "Divide by zero error"},
+};
+
+static LONG CALLBACK
+handleVectoredException(PEXCEPTION_POINTERS ExceptionInfo) {
+  for (int i = 0; i < sizeof(signalDefs) / sizeof(SignalDefs); ++i) {
+    if (ExceptionInfo->ExceptionRecord->ExceptionCode == signalDefs[i].id) {
+      reportFatal(signalDefs[i].name);
+    }
+  }
+  // If its not an exception we care about, pass it along.
+  // This stops us from eating debugger breaks etc.
+  return EXCEPTION_CONTINUE_SEARCH;
 }
 
-#  else // CATCH_CONFIG_WINDOWS_SEH is defined
+// Since we do not support multiple instantiations, we put these
+// into global variables and rely on cleaning them up in outlined
+// constructors/destructors
+static PVOID exceptionHandlerHandle = CATCH_NULL;
 
-namespace Catch {
+class FatalConditionHandler {
+  bool m_started;
 
-    struct SignalDefs { DWORD id; const char* name; };
-    extern SignalDefs signalDefs[];
-    // There is no 1-1 mapping between signals and windows exceptions.
-    // Windows can easily distinguish between SO and SigSegV,
-    // but SigInt, SigTerm, etc are handled differently.
-    SignalDefs signalDefs[] = {
-        { EXCEPTION_ILLEGAL_INSTRUCTION,  "SIGILL - Illegal instruction signal" },
-        { EXCEPTION_STACK_OVERFLOW, "SIGSEGV - Stack overflow" },
-        { EXCEPTION_ACCESS_VIOLATION, "SIGSEGV - Segmentation violation signal" },
-        { EXCEPTION_INT_DIVIDE_BY_ZERO, "Divide by zero error" },
-    };
+  // Install/disengage implementation for specific platform.
+  // Should be if-defed to work on current platform, can assume
+  // engage-disengage 1:1 pairing.
 
-    struct FatalConditionHandler {
+  void engage_platform() {
+    // Register as first handler in current chain
+    exceptionHandlerHandle =
+        AddVectoredExceptionHandler(1, handleVectoredException);
+    if (!exceptionHandlerHandle) {
+      throw std::runtime_error("Could not register vectored exception handler");
+    }
+  }
 
-        static LONG CALLBACK handleVectoredException(PEXCEPTION_POINTERS ExceptionInfo) {
-            for (int i = 0; i < sizeof(signalDefs) / sizeof(SignalDefs); ++i) {
-                if (ExceptionInfo->ExceptionRecord->ExceptionCode == signalDefs[i].id) {
-                    reportFatal(signalDefs[i].name);
-                }
-            }
-            // If its not an exception we care about, pass it along.
-            // This stops us from eating debugger breaks etc.
-            return EXCEPTION_CONTINUE_SEARCH;
-        }
+  void disengage_platform() {
+    if (!RemoveVectoredExceptionHandler(exceptionHandlerHandle)) {
+      throw std::runtime_error(
+          "Could not unregister vectored exception handler");
+    }
+    exceptionHandlerHandle = CATCH_NULL;
+  }
 
-        FatalConditionHandler() {
-            isSet = true;
-            // 32k seems enough for Catch to handle stack overflow,
-            // but the value was found experimentally, so there is no strong guarantee
-            guaranteeSize = 32 * 1024;
-            exceptionHandlerHandle = CATCH_NULL;
-            // Register as first handler in current chain
-            exceptionHandlerHandle = AddVectoredExceptionHandler(1, handleVectoredException);
-            // Pass in guarantee size to be filled
-            SetThreadStackGuarantee(&guaranteeSize);
-        }
+public:
+  FatalConditionHandler() : m_started(false) {
+    ULONG guaranteeSize = static_cast<ULONG>(32 * 1024);
+    if (!SetThreadStackGuarantee(&guaranteeSize)) {
+      // We do not want to fully error out, because needing
+      // the stack reserve should be rare enough anyway.
+      Catch::cerr() << "Failed to reserve piece of stack."
+                    << " Stack overflows will not be reported successfully.";
+    }
+  }
 
-        static void reset() {
-            if (isSet) {
-                // Unregister handler and restore the old guarantee
-                RemoveVectoredExceptionHandler(exceptionHandlerHandle);
-                SetThreadStackGuarantee(&guaranteeSize);
-                exceptionHandlerHandle = CATCH_NULL;
-                isSet = false;
-            }
-        }
+  // We do not attempt to unset the stack guarantee, because
+  // Windows does not support lowering the stack size guarantee.
+  ~FatalConditionHandler() {}
 
-        ~FatalConditionHandler() {
-            reset();
-        }
-    private:
-        static bool isSet;
-        static ULONG guaranteeSize;
-        static PVOID exceptionHandlerHandle;
-    };
+  void engage() {
+    assert(!m_started && "Handler cannot be installed twice.");
+    m_started = true;
+    engage_platform();
+  }
 
-    bool FatalConditionHandler::isSet = false;
-    ULONG FatalConditionHandler::guaranteeSize = 0;
-    PVOID FatalConditionHandler::exceptionHandlerHandle = CATCH_NULL;
+  void disengage() {
+    assert(m_started &&
+           "Handler cannot be uninstalled without being installed first");
+    m_started = false;
+    disengage_platform();
+  }
+};
 
 } // namespace Catch
 
-#  endif // CATCH_CONFIG_WINDOWS_SEH
+#endif // CATCH_CONFIG_WINDOWS_SEH
 
 #else // Not Windows - assumed to be POSIX compatible //////////////////////////
 
-#  if !defined(CATCH_CONFIG_POSIX_SIGNALS)
+#if !defined(CATCH_CONFIG_POSIX_SIGNALS)
 
 namespace Catch {
-    struct FatalConditionHandler {
-        void reset() {}
-    };
-}
+class FatalConditionHandler {
+  bool m_started;
 
-#  else // CATCH_CONFIG_POSIX_SIGNALS is defined
+  // Install/disengage implementation for specific platform.
+  // Should be if-defed to work on current platform, can assume
+  // engage-disengage 1:1 pairing.
+  void engage_platform() {}
+  void disengage_platform() {}
+
+public:
+  // Should also have platform-specific implementations as needed
+  FatalConditionHandler() : m_started(false) {}
+  ~FatalConditionHandler() {}
+
+  void engage() {
+    assert(!m_started && "Handler cannot be installed twice.");
+    m_started = true;
+    engage_platform();
+  }
+
+  void disengage() {
+    assert(m_started &&
+           "Handler cannot be uninstalled without being installed first");
+    m_started = false;
+    disengage_platform();
+  }
+};
+} // namespace Catch
+
+#else // CATCH_CONFIG_POSIX_SIGNALS is defined
 
 #include <signal.h>
 
 namespace Catch {
 
-    struct SignalDefs {
-        int id;
-        const char* name;
-    };
-    extern SignalDefs signalDefs[];
-    SignalDefs signalDefs[] = {
-            { SIGINT,  "SIGINT - Terminal interrupt signal" },
-            { SIGILL,  "SIGILL - Illegal instruction signal" },
-            { SIGFPE,  "SIGFPE - Floating point error signal" },
-            { SIGSEGV, "SIGSEGV - Segmentation violation signal" },
-            { SIGTERM, "SIGTERM - Termination request signal" },
-            { SIGABRT, "SIGABRT - Abort (abnormal termination) signal" }
-    };
+struct SignalDefs {
+  int id;
+  const char *name;
+};
+extern SignalDefs signalDefs[];
+SignalDefs signalDefs[] = {
+    {SIGINT, "SIGINT - Terminal interrupt signal"},
+    {SIGILL, "SIGILL - Illegal instruction signal"},
+    {SIGFPE, "SIGFPE - Floating point error signal"},
+    {SIGSEGV, "SIGSEGV - Segmentation violation signal"},
+    {SIGTERM, "SIGTERM - Termination request signal"},
+    {SIGABRT, "SIGABRT - Abort (abnormal termination) signal"}};
 
-    struct FatalConditionHandler {
+// Older GCCs trigger -Wmissing-field-initializers for T foo = {}
+// which is zero initialization, but not explicit. We want to avoid
+// that.
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#endif
 
-        static bool isSet;
-        static struct sigaction oldSigActions [sizeof(signalDefs)/sizeof(SignalDefs)];
-        static stack_t oldSigStack;
-        static char altStackMem[SIGSTKSZ];
+static char *altStackMem = CATCH_NULL;
+static std::size_t altStackSize = 0;
+static stack_t oldSigStack;
+static struct sigaction oldSigActions[sizeof(signalDefs) / sizeof(SignalDefs)];
 
-        static void handleSignal( int sig ) {
-            std::string name = "<unknown signal>";
-            for (std::size_t i = 0; i < sizeof(signalDefs) / sizeof(SignalDefs); ++i) {
-                SignalDefs &def = signalDefs[i];
-                if (sig == def.id) {
-                    name = def.name;
-                    break;
-                }
-            }
-            reset();
-            reportFatal(name);
-            raise( sig );
-        }
+static void restorePreviousSignalHandlers() {
+  // We set signal handlers back to the previous ones. Hopefully
+  // nobody overwrote them in the meantime, and doesn't expect
+  // their signal handlers to live past ours given that they
+  // installed them after ours..
+  for (std::size_t i = 0; i < sizeof(signalDefs) / sizeof(SignalDefs); ++i) {
+    sigaction(signalDefs[i].id, &oldSigActions[i], CATCH_NULL);
+  }
+  // Return the old stack
+  sigaltstack(&oldSigStack, CATCH_NULL);
+}
 
-        FatalConditionHandler() {
-            isSet = true;
-            stack_t sigStack;
-            sigStack.ss_sp = altStackMem;
-            sigStack.ss_size = SIGSTKSZ;
-            sigStack.ss_flags = 0;
-            sigaltstack(&sigStack, &oldSigStack);
-            struct sigaction sa = { 0 };
+static void handleSignal(int sig) {
+  char const *name = "<unknown signal>";
+  for (std::size_t i = 0; i < sizeof(signalDefs) / sizeof(SignalDefs); ++i) {
+    SignalDefs &def = signalDefs[i];
+    if (sig == def.id) {
+      name = def.name;
+      break;
+    }
+  }
+  // We need to restore previous signal handlers and let them do
+  // their thing, so that the users can have the debugger break
+  // when a signal is raised, and so on.
+  restorePreviousSignalHandlers();
+  reportFatal(name);
+  raise(sig);
+}
 
-            sa.sa_handler = handleSignal;
-            sa.sa_flags = SA_ONSTACK;
-            for (std::size_t i = 0; i < sizeof(signalDefs)/sizeof(SignalDefs); ++i) {
-                sigaction(signalDefs[i].id, &sa, &oldSigActions[i]);
-            }
-        }
+class FatalConditionHandler {
+  bool m_started;
 
-        ~FatalConditionHandler() {
-            reset();
-        }
-        static void reset() {
-            if( isSet ) {
-                // Set signals back to previous values -- hopefully nobody overwrote them in the meantime
-                for( std::size_t i = 0; i < sizeof(signalDefs)/sizeof(SignalDefs); ++i ) {
-                    sigaction(signalDefs[i].id, &oldSigActions[i], CATCH_NULL);
-                }
-                // Return the old stack
-                sigaltstack(&oldSigStack, CATCH_NULL);
-                isSet = false;
-            }
-        }
-    };
+  // Install/disengage implementation for specific platform.
+  // Should be if-defed to work on current platform, can assume
+  // engage-disengage 1:1 pairing.
 
-    bool FatalConditionHandler::isSet = false;
-    struct sigaction FatalConditionHandler::oldSigActions[sizeof(signalDefs)/sizeof(SignalDefs)] = {};
-    stack_t FatalConditionHandler::oldSigStack = {};
-    char FatalConditionHandler::altStackMem[SIGSTKSZ] = {};
+  void engage_platform() {
+    stack_t sigStack;
+    sigStack.ss_sp = altStackMem;
+    sigStack.ss_size = SIGSTKSZ;
+    sigStack.ss_flags = 0;
+    sigaltstack(&sigStack, &oldSigStack);
+    struct sigaction sa = {0};
+
+    sa.sa_handler = handleSignal;
+    sa.sa_flags = SA_ONSTACK;
+    for (std::size_t i = 0; i < sizeof(signalDefs) / sizeof(SignalDefs); ++i) {
+      sigaction(signalDefs[i].id, &sa, &oldSigActions[i]);
+    }
+  }
+
+  void disengage_platform() { restorePreviousSignalHandlers(); }
+
+public:
+  FatalConditionHandler() : m_started(false) {
+    assert(!altStackMem &&
+           "Cannot initialize POSIX signal handler when one already exists");
+    if (altStackSize == 0) {
+      altStackSize = SIGSTKSZ;
+    }
+    altStackMem = new char[altStackSize]();
+  }
+
+  ~FatalConditionHandler() {
+    delete[] altStackMem;
+    // We signal that another instance can be constructed by zeroing
+    // out the pointer.
+    altStackMem = CATCH_NULL;
+  }
+
+  void engage() {
+    assert(!m_started && "Handler cannot be installed twice.");
+    m_started = true;
+    engage_platform();
+  }
+
+  void disengage() {
+    assert(m_started &&
+           "Handler cannot be uninstalled without being installed first");
+    m_started = false;
+    disengage_platform();
+  }
+};
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 } // namespace Catch
 
-#  endif // CATCH_CONFIG_POSIX_SIGNALS
+#endif // CATCH_CONFIG_POSIX_SIGNALS
 
 #endif // not Windows
 
+namespace Catch {
+
+//! Simple RAII guard for (dis)engaging the FatalConditionHandler
+class FatalConditionHandlerGuard {
+  FatalConditionHandler *m_handler;
+
+public:
+  FatalConditionHandlerGuard(FatalConditionHandler *handler)
+      : m_handler(handler) {
+    m_handler->engage();
+  }
+  ~FatalConditionHandlerGuard() { m_handler->disengage(); }
+};
+
+} // end namespace Catch
+
+#include <cassert>
 #include <set>
 #include <string>
 
@@ -6700,7 +6878,10 @@ namespace Catch {
                 m_totals.assertions.passed++;
             }
             else if( !result.isOk() ) {
-                m_totals.assertions.failed++;
+                if( m_activeTestCase->getTestCaseInfo().okToFail() )
+                    m_totals.assertions.failedButOk++;
+                else
+                    m_totals.assertions.failed++;
             }
 
             // We have no use for the return value (whether messages should be cleared), because messages were made scoped
@@ -6889,20 +7070,13 @@ namespace Catch {
             Counts assertions = m_totals.assertions - prevAssertions;
             bool missingAssertions = testForMissingAssertions( assertions );
 
-            if( testCaseInfo.okToFail() ) {
-                std::swap( assertions.failedButOk, assertions.failed );
-                m_totals.assertions.failed -= assertions.failedButOk;
-                m_totals.assertions.failedButOk += assertions.failedButOk;
-            }
-
             SectionStats testCaseSectionStats( testCaseSection, assertions, duration, missingAssertions );
             m_reporter->sectionEnded( testCaseSectionStats );
         }
 
         void invokeActiveTestCase() {
-            FatalConditionHandler fatalConditionHandler; // Handle signals
+            FatalConditionHandlerGuard _(&m_fatalConditionhandler);
             m_activeTestCase->invoke();
-            fatalConditionHandler.reset();
         }
 
     private:
@@ -6940,6 +7114,7 @@ namespace Catch {
         std::vector<SectionEndInfo> m_unfinishedSections;
         std::vector<ITracker*> m_activeSections;
         TrackerContext m_trackerContext;
+        FatalConditionHandler m_fatalConditionhandler;
         size_t m_prevPassed;
         bool m_shouldReportUnexpected;
     };
@@ -7101,6 +7276,13 @@ namespace Catch {
             m_cli.usage( Catch::cout(), processName );
             Catch::cout() << "For more detail usage please see the project docs\n" << std::endl;
         }
+        void libIdentify() {
+            Catch::cout()
+                    << std::left << std::setw(16) << "description: " << "A Catch test executable\n"
+                    << std::left << std::setw(16) << "category: " << "testframework\n"
+                    << std::left << std::setw(16) << "framework: " << "Catch Test\n"
+                    << std::left << std::setw(16) << "version: " << libraryVersion() << std::endl;
+        }
 
         int applyCommandLine( int argc, char const* const* const argv, OnUnusedOptions::DoWhat unusedOptionBehaviour = OnUnusedOptions::Fail ) {
             try {
@@ -7108,6 +7290,8 @@ namespace Catch {
                 m_unusedTokens = m_cli.parseInto( Clara::argsToVector( argc, argv ), m_configData );
                 if( m_configData.showHelp )
                     showHelp( m_configData.processName );
+                if( m_configData.libIdentify )
+                    libIdentify();
                 m_config.reset();
             }
             catch( std::exception& ex ) {
@@ -7164,7 +7348,36 @@ namespace Catch {
     #endif
 
         int run() {
-            if( m_configData.showHelp )
+            if( ( m_configData.waitForKeypress & WaitForKeypress::BeforeStart ) != 0 ) {
+                Catch::cout() << "...waiting for enter/ return before starting" << std::endl;
+                static_cast<void>(std::getchar());
+            }
+            int exitCode = runInternal();
+            if( ( m_configData.waitForKeypress & WaitForKeypress::BeforeExit ) != 0 ) {
+                Catch::cout() << "...waiting for enter/ return before exiting, with code: " << exitCode << std::endl;
+                static_cast<void>(std::getchar());
+            }
+            return exitCode;
+        }
+
+        Clara::CommandLine<ConfigData> const& cli() const {
+            return m_cli;
+        }
+        std::vector<Clara::Parser::Token> const& unusedTokens() const {
+            return m_unusedTokens;
+        }
+        ConfigData& configData() {
+            return m_configData;
+        }
+        Config& config() {
+            if( !m_config )
+                m_config = new Config( m_configData );
+            return *m_config;
+        }
+    private:
+
+        int runInternal() {
+            if( m_configData.showHelp || m_configData.libIdentify )
                 return 0;
 
             try
@@ -7188,21 +7401,6 @@ namespace Catch {
             }
         }
 
-        Clara::CommandLine<ConfigData> const& cli() const {
-            return m_cli;
-        }
-        std::vector<Clara::Parser::Token> const& unusedTokens() const {
-            return m_unusedTokens;
-        }
-        ConfigData& configData() {
-            return m_configData;
-        }
-        Config& config() {
-            if( !m_config )
-                m_config = new Config( m_configData );
-            return *m_config;
-        }
-    private:
         Clara::CommandLine<ConfigData> m_cli;
         std::vector<Clara::Parser::Token> m_unusedTokens;
         ConfigData m_configData;
@@ -7227,14 +7425,14 @@ namespace Catch {
 namespace Catch {
 
     struct RandomNumberGenerator {
-        typedef std::ptrdiff_t result_type;
+        typedef unsigned int result_type;
 
         result_type operator()( result_type n ) const { return std::rand() % n; }
 
 #ifdef CATCH_CONFIG_CPP11_SHUFFLE
-        static constexpr result_type min() { return 0; }
-        static constexpr result_type max() { return 1000000; }
-        result_type operator()() const { return std::rand() % max(); }
+        static constexpr result_type (min)() { return 0; }
+        static constexpr result_type (max)() { return 1000000; }
+        result_type operator()() const { return std::rand() % (max)(); }
 #endif
         template<typename V>
         static void shuffle( V& vector ) {
@@ -8148,7 +8346,7 @@ namespace Catch {
 
     std::string AssertionResult::getExpression() const {
         if( isFalseTest( m_info.resultDisposition ) )
-            return '!' + capturedExpressionWithSecondArgument(m_info.capturedExpression, m_info.secondArg);
+            return "!(" + capturedExpressionWithSecondArgument(m_info.capturedExpression, m_info.secondArg) + ")";
         else
             return capturedExpressionWithSecondArgument(m_info.capturedExpression, m_info.secondArg);
     }
@@ -8406,7 +8604,7 @@ namespace Catch {
     }
 
     inline Version libraryVersion() {
-        static Version version( 1, 9, 7, "", 0 );
+        static Version version( 1, 12, 2, "", 0 );
         return version;
     }
 
@@ -8441,11 +8639,18 @@ namespace Catch {
     : m_info( other.m_info )
     {}
 
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:4996) // std::uncaught_exception is deprecated in C++17
+#endif
     ScopedMessage::~ScopedMessage() {
         if ( !std::uncaught_exception() ){
             getResultCapture().popScopedMessage(m_info);
         }
     }
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
 } // end namespace Catch
 
@@ -9103,6 +9308,8 @@ std::string toString( std::nullptr_t ) {
 
 // #included from: catch_result_builder.hpp
 #define TWOBLUECUBES_CATCH_RESULT_BUILDER_HPP_INCLUDED
+
+#include <cassert>
 
 namespace Catch {
 
@@ -10220,12 +10427,12 @@ namespace Catch {
 
             bool includeResults = m_config->includeSuccessfulResults() || !result.isOk();
 
-            if( includeResults ) {
+            if( includeResults || result.getResultType() == ResultWas::Warning ) {
                 // Print any info messages in <Info> tags.
                 for( std::vector<MessageInfo>::const_iterator it = assertionStats.infoMessages.begin(), itEnd = assertionStats.infoMessages.end();
                      it != itEnd;
                      ++it ) {
-                    if( it->type == ResultWas::Info ) {
+                    if( it->type == ResultWas::Info && includeResults ) {
                         m_xml.scopedElement( "Info" )
                                 .writeText( it->message );
                     } else if ( it->type == ResultWas::Warning ) {
@@ -10597,6 +10804,7 @@ namespace Catch {
 // #included from: ../reporters/catch_reporter_console.hpp
 #define TWOBLUECUBES_CATCH_REPORTER_CONSOLE_HPP_INCLUDED
 
+#include <cassert>
 #include <cfloat>
 #include <cstdio>
 

@@ -23,6 +23,7 @@
 #include "IRsend_test.h"
 #endif
 
+/// Native representation of a Airwell A/C message.
 union AirwellProtocol{
   uint64_t raw;  // The state of the IR remote in native IR code form.
   struct {
@@ -35,6 +36,7 @@ union AirwellProtocol{
     uint64_t            :0;
   };
 };
+
 // Constants
 const uint64_t kAirwellKnownGoodState = 0x140500002;  // Mode Fan, Speed 1, 25C
 // Temperature
@@ -83,7 +85,7 @@ class IRAirwellAc {
   static uint8_t convertFan(const stdAc::fanspeed_t speed);
   static stdAc::opmode_t toCommonMode(const uint8_t mode);
   static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
-  stdAc::state_t toCommon(void) const;
+  stdAc::state_t toCommon(const stdAc::state_t *prev = NULL) const;
   String toString() const;
 #ifndef UNIT_TEST
 

@@ -3,7 +3,7 @@
 
 /// @file
 /// @brief Support for Sharp protocols.
-/// @see http://www.sbprojects.com/knowledge/ir/sharp.htm
+/// @see http://www.sbprojects.net/knowledge/ir/sharp.htm
 /// @see http://lirc.sourceforge.net/remotes/sharp/GA538WJSA
 /// @see http://www.mwftr.com/ucF08/LEC14%20PIC%20IR.pdf
 /// @see http://www.hifi-remote.com/johnsfine/DecodeIR.html#Sharp
@@ -44,10 +44,11 @@ using irutils::addFanToString;
 using irutils::addIntToString;
 using irutils::addLabeledString;
 using irutils::addModeToString;
+using irutils::addModelToString;
+using irutils::addSwingVToString;
 using irutils::addTempToString;
+using irutils::addToggleToString;
 using irutils::minsToString;
-using irutils::setBit;
-using irutils::setBits;
 
 // Also used by Denon protocol
 #if (SEND_SHARP || SEND_DENON)
@@ -76,7 +77,7 @@ void IRsend::sendSharpRaw(const uint64_t data, const uint16_t nbits,
                   0,  // Repeats are handled already.
                   33);
       // Invert the data per protocol. This is always called twice, so it's
-      // retured to original upon exiting the inner loop.
+      // returned to original upon exiting the inner loop.
       tempdata ^= kSharpToggleMask;
     }
   }
@@ -109,7 +110,7 @@ uint32_t IRsend::encodeSharp(const uint16_t address, const uint16_t command,
     tempaddress = reverseBits(tempaddress, kSharpAddressBits);
     tempcommand = reverseBits(tempcommand, kSharpCommandBits);
   }
-  // Concatinate all the bits.
+  // Concatenate all the bits.
   return (tempaddress << (kSharpCommandBits + 2)) | (tempcommand << 2) |
          (tempexpansion << 1) | tempcheck;
 }
@@ -243,7 +244,7 @@ void IRsend::sendSharpAc(const unsigned char data[], const uint16_t nbytes,
 /// @param[in] use_modulation Is frequency modulation to be used?
 IRSharpAc::IRSharpAc(const uint16_t pin, const bool inverted,
                      const bool use_modulation)
-    : _irsend(pin, inverted, use_modulation) { this->stateReset(); }
+    : _irsend(pin, inverted, use_modulation) { stateReset(); }
 
 /// Set up hardware to be able to send a message.
 void IRSharpAc::begin(void) { _irsend.begin(); }
@@ -278,8 +279,7 @@ bool IRSharpAc::validChecksum(uint8_t state[], const uint16_t length) {
 
 /// Calculate and set the checksum values for the internal state.
 void IRSharpAc::checksum(void) {
-  setBits(&remote[kSharpAcStateLength - 1], kHighNibble, kNibbleSize,
-          this->calcChecksum(remote));
+  _.Sum = calcChecksum(_.raw);
 }
 
 /// Reset the state of the remote to a known good state/sequence.
@@ -287,50 +287,85 @@ void IRSharpAc::stateReset(void) {
   static const uint8_t reset[kSharpAcStateLength] = {
       0xAA, 0x5A, 0xCF, 0x10, 0x00, 0x01, 0x00, 0x00, 0x08, 0x80, 0x00, 0xE0,
       0x01};
-  memcpy(remote, reset, kSharpAcStateLength);
+  std::memcpy(_.raw, reset, kSharpAcStateLength);
   _temp = getTemp();
-  _mode = getMode();
-  _fan = getFan();
+  _mode = _.Mode;
+  _fan = _.Fan;
+  _model = getModel(true);
 }
 
 /// Get a PTR to the internal state/code for this protocol.
 /// @return PTR to a code for this protocol based on the current internal state.
 uint8_t *IRSharpAc::getRaw(void) {
-  this->checksum();  // Ensure correct settings before sending.
-  return remote;
+  checksum();  // Ensure correct settings before sending.
+  return _.raw;
 }
 
 /// Set the internal state from a valid code for this protocol.
 /// @param[in] new_code A valid code for this protocol.
 /// @param[in] length The length/size of the new_code array.
 void IRSharpAc::setRaw(const uint8_t new_code[], const uint16_t length) {
-  memcpy(remote, new_code, std::min(length, kSharpAcStateLength));
+  std::memcpy(_.raw, new_code, std::min(length, kSharpAcStateLength));
+  _model = getModel(true);
+}
+
+/// Set the model of the A/C to emulate.
+/// @param[in] model The enum of the appropriate model.
+void IRSharpAc::setModel(const sharp_ac_remote_model_t model) {
+  switch (model) {
+    case sharp_ac_remote_model_t::A705:
+    case sharp_ac_remote_model_t::A903:
+      _model = model;
+      _.Model = true;
+      break;
+    default:
+      _model = sharp_ac_remote_model_t::A907;
+      _.Model = false;
+  }
+  _.Model2 = (_model != sharp_ac_remote_model_t::A907);
+  // Redo the operating mode as some models don't support all modes.
+  setMode(_.Mode);
+}
+
+/// Get/Detect the model of the A/C.
+/// @param[in] raw Try to determine the model from the raw code only.
+/// @return The enum of the compatible model.
+sharp_ac_remote_model_t IRSharpAc::getModel(const bool raw) const {
+  if (raw) {
+    if (_.Model2) {
+      if (_.Model)
+        return sharp_ac_remote_model_t::A705;
+      else
+        return sharp_ac_remote_model_t::A903;
+    } else {
+      return sharp_ac_remote_model_t::A907;
+    }
+  }
+  return _model;
 }
 
 /// Set the value of the Power Special setting without any checks.
 /// @param[in] value The value to set Power Special to.
-void IRSharpAc::setPowerSpecial(const uint8_t value) {
-  setBits(&remote[kSharpAcBytePowerSpecial], kSharpAcPowerSetSpecialOffset,
-          kSharpAcPowerSpecialSize, value);
+inline void IRSharpAc::setPowerSpecial(const uint8_t value) {
+  _.PowerSpecial = value;
 }
 
 /// Get the value of the Power Special setting.
 /// @return The setting's value.
-uint8_t IRSharpAc::getPowerSpecial(void) {
-  return GETBITS8(remote[kSharpAcBytePowerSpecial],
-                  kSharpAcPowerSetSpecialOffset, kSharpAcPowerSpecialSize);
+uint8_t IRSharpAc::getPowerSpecial(void) const {
+  return _.PowerSpecial;
 }
 
 /// Clear the "special"/non-normal bits in the power section.
 /// e.g. for normal/common command modes.
 void IRSharpAc::clearPowerSpecial(void) {
-  setPowerSpecial(getPowerSpecial() & kSharpAcPowerOn);
+  setPowerSpecial(_.PowerSpecial & kSharpAcPowerOn);
 }
 
 /// Is one of the special power states in use?
 /// @return true, it is. false, it isn't.
-bool IRSharpAc::isPowerSpecial(void) {
-  switch (getPowerSpecial()) {
+bool IRSharpAc::isPowerSpecial(void) const {
+  switch (_.PowerSpecial) {
     case kSharpAcPowerSetSpecialOff:
     case kSharpAcPowerSetSpecialOn:
     case kSharpAcPowerTimerSetting: return true;
@@ -351,14 +386,14 @@ void IRSharpAc::setPower(const bool on, const bool prev_on) {
   setPowerSpecial(on ? (prev_on ? kSharpAcPowerOn : kSharpAcPowerOnFromOff)
                      : kSharpAcPowerOff);
   // Power operations are incompatible with clean mode.
-  if (getClean()) setClean(false);
-  setSpecial(kSharpAcSpecialPower);
+  if (_.Clean) setClean(false);
+  _.Special = kSharpAcSpecialPower;
 }
 
 /// Get the value of the current power setting.
 /// @return true, the setting is on. false, the setting is off.
-bool IRSharpAc::getPower(void) {
-  switch (getPowerSpecial()) {
+bool IRSharpAc::getPower(void) const {
+  switch (_.PowerSpecial) {
     case kSharpAcPowerUnknown:
     case kSharpAcPowerOff: return false;
     default: return true;  // Everything else is "probably" on.
@@ -376,76 +411,93 @@ void IRSharpAc::setSpecial(const uint8_t mode) {
     case kSharpAcSpecialSwing:
     case kSharpAcSpecialTimer:
     case kSharpAcSpecialTimerHalfHour:
-      remote[kSharpAcByteSpecial] = mode;
+      _.Special = mode;
       break;
     default:
-      setSpecial(kSharpAcSpecialPower);
+      _.Special = kSharpAcSpecialPower;
   }
 }
 
 /// Get the value of the Special (button/command?) setting.
 /// @return The setting's value.
-uint8_t IRSharpAc::getSpecial(void) { return remote[kSharpAcByteSpecial]; }
+uint8_t IRSharpAc::getSpecial(void) const { return _.Special; }
 
 /// Set the temperature.
 /// @param[in] temp The temperature in degrees celsius.
 /// @param[in] save Do we save this setting as a user set one?
 void IRSharpAc::setTemp(const uint8_t temp, const bool save) {
-  switch (this->getMode()) {
+  switch (_.Mode) {
     // Auto & Dry don't allow temp changes and have a special temp.
     case kSharpAcAuto:
     case kSharpAcDry:
-      remote[kSharpAcByteTemp] = 0;
+      _.raw[kSharpAcByteTemp] = 0;
       return;
     default:
-      remote[kSharpAcByteTemp] = 0xC0;
+      switch (getModel()) {
+        case sharp_ac_remote_model_t::A705:
+          _.raw[kSharpAcByteTemp] = 0xD0;
+          break;
+        default:
+          _.raw[kSharpAcByteTemp] = 0xC0;
+      }
   }
   uint8_t degrees = std::max(temp, kSharpAcMinTemp);
   degrees = std::min(degrees, kSharpAcMaxTemp);
   if (save) _temp = degrees;
-  setBits(&remote[kSharpAcByteTemp], kLowNibble, kNibbleSize,
-          degrees - kSharpAcMinTemp);
-  setSpecial(kSharpAcSpecialTempEcono);
+  _.Temp = degrees - kSharpAcMinTemp;
+  _.Special = kSharpAcSpecialTempEcono;
   clearPowerSpecial();
 }
 
 /// Get the current temperature setting.
 /// @return The current setting for temp. in degrees celsius.
-uint8_t IRSharpAc::getTemp(void) {
-  return GETBITS8(remote[kSharpAcByteTemp], kLowNibble, kNibbleSize) +
-      kSharpAcMinTemp;
+uint8_t IRSharpAc::getTemp(void) const {
+  return _.Temp + kSharpAcMinTemp;
 }
 
 /// Get the operating mode setting of the A/C.
 /// @return The current operating mode setting.
-uint8_t IRSharpAc::getMode(void) {
-  return GETBITS8(remote[kSharpAcByteMode], kLowNibble, kSharpAcModeSize);
+uint8_t IRSharpAc::getMode(void) const {
+  return _.Mode;
 }
 
 /// Set the operating mode of the A/C.
 /// @param[in] mode The desired operating mode.
 /// @param[in] save Do we save this setting as a user set one?
 void IRSharpAc::setMode(const uint8_t mode, const bool save) {
-  switch (mode) {
-    case kSharpAcAuto:
+  uint8_t realMode = mode;
+  if (mode == kSharpAcHeat) {
+    switch (getModel()) {
+      case sharp_ac_remote_model_t::A705:
+      case sharp_ac_remote_model_t::A903:
+        // These models have no heat mode, use Fan mode instead.
+        realMode = kSharpAcFan;
+        break;
+      default:
+        break;
+    }
+  }
+
+  switch (realMode) {
+    case kSharpAcAuto:  // Also kSharpAcFan
     case kSharpAcDry:
       // When Dry or Auto, Fan always 2(Auto)
-      this->setFan(kSharpAcFanAuto, false);
+      setFan(kSharpAcFanAuto, false);
       // FALLTHRU
     case kSharpAcCool:
     case kSharpAcHeat:
-      setBits(&remote[kSharpAcByteMode], kLowNibble, kSharpAcModeSize, mode);
+      _.Mode = realMode;
       break;
     default:
-      this->setMode(kSharpAcAuto, save);
-      return;
+      setFan(kSharpAcFanAuto, false);
+      _.Mode = kSharpAcAuto;
   }
   // Dry/Auto have no temp setting. This step will enforce it.
-  this->setTemp(_temp, false);
+  setTemp(_temp, false);
   // Save the mode in case we need to revert to it. eg. Clean
-  if (save) _mode = mode;
+  if (save) _mode = _.Mode;
 
-  setSpecial(kSharpAcSpecialPower);
+  _.Special = kSharpAcSpecialPower;
   clearPowerSpecial();
 }
 
@@ -459,29 +511,28 @@ void IRSharpAc::setFan(const uint8_t speed, const bool save) {
     case kSharpAcFanMed:
     case kSharpAcFanHigh:
     case kSharpAcFanMax:
-      setBits(&remote[kSharpAcByteFan], kSharpAcFanOffset, kSharpAcFanSize,
-              speed);
+      _.Fan = speed;
+      if (save) _fan = speed;
       break;
     default:
-      this->setFan(kSharpAcFanAuto);
-      return;
+      _.Fan = kSharpAcFanAuto;
+      _fan = kSharpAcFanAuto;
   }
-  if (save) _fan = speed;
-  setSpecial(kSharpAcSpecialFan);
+  _.Special = kSharpAcSpecialFan;
   clearPowerSpecial();
 }
 
 /// Get the current fan speed setting.
 /// @return The current fan speed/mode.
-uint8_t IRSharpAc::getFan(void) {
-  return GETBITS8(remote[kSharpAcByteFan], kSharpAcFanOffset, kSharpAcFanSize);
+uint8_t IRSharpAc::getFan(void) const {
+  return _.Fan;
 }
 
 /// Get the Turbo setting of the A/C.
 /// @return true, the setting is on. false, the setting is off.
-bool IRSharpAc::getTurbo(void) {
-  return (getPowerSpecial() == kSharpAcPowerSetSpecialOn) &&
-         (getSpecial() == kSharpAcSpecialTurbo);
+bool IRSharpAc::getTurbo(void) const {
+  return (_.PowerSpecial == kSharpAcPowerSetSpecialOn) &&
+         (_.Special == kSharpAcSpecialTurbo);
 }
 
 /// Set the Turbo setting of the A/C.
@@ -492,73 +543,147 @@ bool IRSharpAc::getTurbo(void) {
 void IRSharpAc::setTurbo(const bool on) {
   if (on) setFan(kSharpAcFanMax);
   setPowerSpecial(on ? kSharpAcPowerSetSpecialOn : kSharpAcPowerSetSpecialOff);
-  setSpecial(kSharpAcSpecialTurbo);
+  _.Special = kSharpAcSpecialTurbo;
+}
+
+/// Get the Vertical Swing setting of the A/C.
+/// @return The position of the Vertical Swing setting.
+uint8_t IRSharpAc::getSwingV(void) const { return _.Swing; }
+
+/// Set the Vertical Swing setting of the A/C.
+/// @note Some positions may not work on all models.
+/// @param[in] position The desired position/setting.
+/// @note `setSwingV(kSharpAcSwingVLowest)` will only allow the Lowest setting
+/// in Heat mode, it will default to `kSharpAcSwingVLow` otherwise.
+/// If you want to set this value in other modes e.g. Cool, you must
+/// use `setSwingV`s optional `force` parameter.
+/// @param[in] force Do we override the safety checks and just do it?
+void IRSharpAc::setSwingV(const uint8_t position, const bool force) {
+  switch (position) {
+    case kSharpAcSwingVCoanda:
+      // Only allowed in Heat mode.
+      if (!force && getMode() != kSharpAcHeat) {
+        setSwingV(kSharpAcSwingVLow);  // Use the next lowest setting.
+        return;
+      }
+      // FALLTHRU
+    case kSharpAcSwingVHigh:
+    case kSharpAcSwingVMid:
+    case kSharpAcSwingVLow:
+    case kSharpAcSwingVToggle:
+    case kSharpAcSwingVOff:
+    case kSharpAcSwingVLast:  // Technically valid, but we don't use it.
+      // All expected non-positions set the special bits.
+      _.Special = kSharpAcSpecialSwing;
+      // FALLTHRU
+    case kSharpAcSwingVIgnore:
+      _.Swing = position;
+  }
+}
+
+/// Convert a standard A/C vertical swing into its native setting.
+/// @param[in] position A stdAc::swingv_t position to convert.
+/// @return The equivalent native horizontal swing position.
+uint8_t IRSharpAc::convertSwingV(const stdAc::swingv_t position) {
+  switch (position) {
+    case stdAc::swingv_t::kHighest:
+    case stdAc::swingv_t::kHigh:    return kSharpAcSwingVHigh;
+    case stdAc::swingv_t::kMiddle:  return kSharpAcSwingVMid;
+    case stdAc::swingv_t::kLow:     return kSharpAcSwingVLow;
+    case stdAc::swingv_t::kLowest:  return kSharpAcSwingVCoanda;
+    case stdAc::swingv_t::kAuto:    return kSharpAcSwingVToggle;
+    case stdAc::swingv_t::kOff:     return kSharpAcSwingVOff;
+    default:                        return kSharpAcSwingVIgnore;
+  }
 }
 
 /// Get the (vertical) Swing Toggle setting of the A/C.
 /// @return true, the setting is on. false, the setting is off.
-bool IRSharpAc::getSwingToggle(void) {
-  return GETBITS8(remote[kSharpAcByteSwing], kSharpAcSwingOffset,
-                  kSharpAcSwingSize) == kSharpAcSwingToggle;
+bool IRSharpAc::getSwingToggle(void) const {
+  return getSwingV() == kSharpAcSwingVToggle;
 }
 
 /// Set the (vertical) Swing Toggle setting of the A/C.
 /// @param[in] on true, the setting is on. false, the setting is off.
 void IRSharpAc::setSwingToggle(const bool on) {
-  setBits(&remote[kSharpAcByteSwing], kSharpAcSwingOffset, kSharpAcSwingSize,
-          on ? kSharpAcSwingToggle : kSharpAcSwingNoToggle);
-  if (on) setSpecial(kSharpAcSpecialSwing);
+  setSwingV(on ? kSharpAcSwingVToggle : kSharpAcSwingVIgnore);
+  if (on) _.Special = kSharpAcSpecialSwing;
 }
 
 /// Get the Ion (Filter) setting of the A/C.
 /// @return true, the setting is on. false, the setting is off.
-bool IRSharpAc::getIon(void) {
-  return GETBIT8(remote[kSharpAcByteIon], kSharpAcBitIonOffset);
-}
+bool IRSharpAc::getIon(void) const { return _.Ion; }
 
 /// Set the Ion (Filter) setting of the A/C.
 /// @param[in] on true, the setting is on. false, the setting is off.
 void IRSharpAc::setIon(const bool on) {
-  setBit(&remote[kSharpAcByteIon], kSharpAcBitIonOffset, on);
+  _.Ion = on;
   clearPowerSpecial();
-  if (on) setSpecial(kSharpAcSpecialSwing);
+  if (on) _.Special = kSharpAcSpecialSwing;
 }
 
 /// Get the Economical mode toggle setting of the A/C.
 /// @return true, the setting is on. false, the setting is off.
-bool IRSharpAc::getEconoToggle(void) {
-  return (getPowerSpecial() == kSharpAcPowerSetSpecialOn) &&
-         (getSpecial() == kSharpAcSpecialTempEcono);
+/// @note Shares the same location as the Light setting on A705.
+bool IRSharpAc::_getEconoToggle(void) const {
+  return (_.PowerSpecial == kSharpAcPowerSetSpecialOn) &&
+         (_.Special == kSharpAcSpecialTempEcono);
 }
 
 /// Set the Economical mode toggle setting of the A/C.
 /// @param[in] on true, the setting is on. false, the setting is off.
 /// @warning Probably incompatible with `setTurbo()`
-void IRSharpAc::setEconoToggle(const bool on) {
-  if (on) setSpecial(kSharpAcSpecialTempEcono);
+/// @note Shares the same location as the Light setting on A705.
+void IRSharpAc::_setEconoToggle(const bool on) {
+  if (on) _.Special = kSharpAcSpecialTempEcono;
   setPowerSpecial(on ? kSharpAcPowerSetSpecialOn : kSharpAcPowerSetSpecialOff);
+}
+
+/// Set the Economical mode toggle setting of the A/C.
+/// @param[in] on true, the setting is on. false, the setting is off.
+/// @warning Probably incompatible with `setTurbo()`
+/// @note Available on the A907 models.
+void IRSharpAc::setEconoToggle(const bool on) {
+  if (_model == sharp_ac_remote_model_t::A907) _setEconoToggle(on);
+}
+
+/// Get the Economical mode toggle setting of the A/C.
+/// @return true, the setting is on. false, the setting is off.
+/// @note Available on the A907 models.
+bool IRSharpAc::getEconoToggle(void) const {
+  return _model == sharp_ac_remote_model_t::A907 && _getEconoToggle();
+}
+
+/// Set the Light mode toggle setting of the A/C.
+/// @param[in] on true, the setting is on. false, the setting is off.
+/// @warning Probably incompatible with `setTurbo()`
+/// @note Not available on the A907 model.
+void IRSharpAc::setLightToggle(const bool on) {
+  if (_model != sharp_ac_remote_model_t::A907) _setEconoToggle(on);
+}
+
+/// Get the Light toggle setting of the A/C.
+/// @return true, the setting is on. false, the setting is off.
+/// @note Not available on the A907 model.
+bool IRSharpAc::getLightToggle(void) const {
+  return _model != sharp_ac_remote_model_t::A907 && _getEconoToggle();
 }
 
 /// Get how long the timer is set for, in minutes.
 /// @return The time in nr of minutes.
-uint16_t IRSharpAc::getTimerTime(void) {
-  return GETBITS8(remote[kSharpAcByteTimer], kSharpAcTimerHoursOffset,
-                  kSharpAcTimerHoursSize) * kSharpAcTimerIncrement * 2 +
-      ((getSpecial() == kSharpAcSpecialTimerHalfHour) ? kSharpAcTimerIncrement
-                                                      : 0);
+uint16_t IRSharpAc::getTimerTime(void) const {
+  return _.TimerHours * kSharpAcTimerIncrement * 2 +
+      ((_.Special == kSharpAcSpecialTimerHalfHour) ? kSharpAcTimerIncrement
+                                                   : 0);
 }
 
 /// Is the Timer enabled?
 /// @return true, the setting is on. false, the setting is off.
-bool IRSharpAc::getTimerEnabled(void) {
-  return GETBIT8(remote[kSharpAcByteTimer], kSharpAcBitTimerEnabled);
-}
+bool IRSharpAc::getTimerEnabled(void) const { return _.TimerEnabled; }
 
 /// Get the current timer type.
 /// @return true, It's an "On" timer. false, It's an "Off" timer.
-bool IRSharpAc::getTimerType(void) {
-  return GETBIT8(remote[kSharpAcByteTimer], kSharpAcBitTimerType);
-}
+bool IRSharpAc::getTimerType(void) const { return _.TimerType; }
 
 /// Set or cancel the timer function.
 /// @param[in] enable Is the timer to be enabled (true) or canceled(false)?
@@ -573,20 +698,19 @@ void IRSharpAc::setTimer(bool enable, bool timer_type, uint16_t mins) {
     half_hours = 0;
     timer_type = kSharpAcOffTimerType;
   }
-  setBit(&remote[kSharpAcByteTimer], kSharpAcBitTimerEnabled, enable);
-  setBit(&remote[kSharpAcByteTimer], kSharpAcBitTimerType, timer_type);
-  setBits(&remote[kSharpAcByteTimer], kSharpAcTimerHoursOffset,
-          kSharpAcTimerHoursSize, half_hours / 2);
+  _.TimerEnabled = enable;
+  _.TimerType = timer_type;
+  _.TimerHours = half_hours / 2;
   // Handle non-round hours.
-  setSpecial((half_hours % 2) ? kSharpAcSpecialTimerHalfHour
-                              : kSharpAcSpecialTimer);
+  _.Special = (half_hours % 2) ? kSharpAcSpecialTimerHalfHour
+                               : kSharpAcSpecialTimer;
   setPowerSpecial(kSharpAcPowerTimerSetting);
 }
 
 /// Get the Clean setting of the A/C.
 /// @return true, the setting is on. false, the setting is off.
-bool IRSharpAc::getClean(void) {
-  return GETBIT8(remote[kSharpAcByteClean], kSharpAcBitCleanOffset);
+bool IRSharpAc::getClean(void) const {
+  return _.Clean;
 }
 
 /// Set the Economical mode toggle setting of the A/C.
@@ -602,13 +726,13 @@ void IRSharpAc::setClean(const bool on) {
     setMode(_mode, false);
     setFan(_fan, false);
   }
-  setBit(&remote[kSharpAcByteClean], kSharpAcBitCleanOffset, on);
+  _.Clean = on;
   clearPowerSpecial();
 }
 
 /// Convert a stdAc::opmode_t enum into its native mode.
 /// @param[in] mode The enum to be converted.
-/// @return The native equivilant of the enum.
+/// @return The native equivalent of the enum.
 uint8_t IRSharpAc::convertMode(const stdAc::opmode_t mode) {
   switch (mode) {
     case stdAc::opmode_t::kCool: return kSharpAcCool;
@@ -621,65 +745,119 @@ uint8_t IRSharpAc::convertMode(const stdAc::opmode_t mode) {
 
 /// Convert a stdAc::fanspeed_t enum into it's native speed.
 /// @param[in] speed The enum to be converted.
-/// @return The native equivilant of the enum.
-uint8_t IRSharpAc::convertFan(const stdAc::fanspeed_t speed) {
-  switch (speed) {
-    case stdAc::fanspeed_t::kMin:
-    case stdAc::fanspeed_t::kLow:    return kSharpAcFanMin;
-    case stdAc::fanspeed_t::kMedium: return kSharpAcFanMed;
-    case stdAc::fanspeed_t::kHigh:   return kSharpAcFanHigh;
-    case stdAc::fanspeed_t::kMax:    return kSharpAcFanMax;
-    default:                         return kSharpAcFanAuto;
+/// @param[in] model The enum of the appropriate model.
+/// @return The native equivalent of the enum.
+uint8_t IRSharpAc::convertFan(const stdAc::fanspeed_t speed,
+                              const sharp_ac_remote_model_t model) {
+  switch (model) {
+    case sharp_ac_remote_model_t::A705:
+    case sharp_ac_remote_model_t::A903:
+      switch (speed) {
+        case stdAc::fanspeed_t::kLow:    return kSharpAcFanA705Low;
+        case stdAc::fanspeed_t::kMedium: return kSharpAcFanA705Med;
+        default: {};  // Fall thru to the next/default clause if not the above
+                      // special cases.
+      }
+    // FALL THRU
+    default:
+      switch (speed) {
+        case stdAc::fanspeed_t::kMin:
+        case stdAc::fanspeed_t::kLow:    return kSharpAcFanMin;
+        case stdAc::fanspeed_t::kMedium: return kSharpAcFanMed;
+        case stdAc::fanspeed_t::kHigh:   return kSharpAcFanHigh;
+        case stdAc::fanspeed_t::kMax:    return kSharpAcFanMax;
+        default:                         return kSharpAcFanAuto;
+      }
   }
 }
 
-/// Convert a native mode into its stdAc equivilant.
+/// Convert a native mode into its stdAc equivalent.
 /// @param[in] mode The native setting to be converted.
-/// @return The stdAc equivilant of the native setting.
-stdAc::opmode_t IRSharpAc::toCommonMode(const uint8_t mode) {
+/// @return The stdAc equivalent of the native setting.
+stdAc::opmode_t IRSharpAc::toCommonMode(const uint8_t mode) const {
   switch (mode) {
     case kSharpAcCool: return stdAc::opmode_t::kCool;
     case kSharpAcHeat: return stdAc::opmode_t::kHeat;
     case kSharpAcDry:  return stdAc::opmode_t::kDry;
+    case kSharpAcAuto:  // Also kSharpAcFan
+      switch (getModel()) {
+        case sharp_ac_remote_model_t::A705: return stdAc::opmode_t::kFan;
+        default:                            return stdAc::opmode_t::kAuto;
+      }
+      break;
     default:           return stdAc::opmode_t::kAuto;
   }
 }
 
-/// Convert a native fan speed into its stdAc equivilant.
+/// Convert a native fan speed into its stdAc equivalent.
 /// @param[in] speed The native setting to be converted.
-/// @return The stdAc equivilant of the native setting.
-stdAc::fanspeed_t IRSharpAc::toCommonFanSpeed(const uint8_t speed) {
-  switch (speed) {
-    case kSharpAcFanMax:  return stdAc::fanspeed_t::kMax;
-    case kSharpAcFanHigh: return stdAc::fanspeed_t::kHigh;
-    case kSharpAcFanMed:  return stdAc::fanspeed_t::kMedium;
-    case kSharpAcFanMin:  return stdAc::fanspeed_t::kMin;
-    default:              return stdAc::fanspeed_t::kAuto;
+/// @return The stdAc equivalent of the native setting.
+stdAc::fanspeed_t IRSharpAc::toCommonFanSpeed(const uint8_t speed) const {
+  switch (getModel()) {
+    case sharp_ac_remote_model_t::A705:
+    case sharp_ac_remote_model_t::A903:
+      switch (speed) {
+        case kSharpAcFanA705Low:  return stdAc::fanspeed_t::kLow;
+        case kSharpAcFanA705Med:  return stdAc::fanspeed_t::kMedium;
+      }
+      // FALL-THRU
+    default:
+      switch (speed) {
+        case kSharpAcFanMax:  return stdAc::fanspeed_t::kMax;
+        case kSharpAcFanHigh: return stdAc::fanspeed_t::kHigh;
+        case kSharpAcFanMed:  return stdAc::fanspeed_t::kMedium;
+        case kSharpAcFanMin:  return stdAc::fanspeed_t::kMin;
+        default:              return stdAc::fanspeed_t::kAuto;
+      }
   }
 }
 
-/// Convert the current internal state into its stdAc::state_t equivilant.
-/// @return The stdAc equivilant of the native settings.
-stdAc::state_t IRSharpAc::toCommon(void) {
-  stdAc::state_t result;
+/// Convert a native vertical swing postion to it's common equivalent.
+/// @param[in] pos A native position to convert.
+/// @param[in] mode What operating mode are we in?
+/// @return The common vertical swing position.
+stdAc::swingv_t IRSharpAc::toCommonSwingV(const uint8_t pos,
+                                          const stdAc::opmode_t mode) const {
+  switch (pos) {
+    case kSharpAcSwingVHigh:   return stdAc::swingv_t::kHighest;
+    case kSharpAcSwingVMid:    return stdAc::swingv_t::kMiddle;
+    case kSharpAcSwingVLow:    return stdAc::swingv_t::kLow;
+    case kSharpAcSwingVCoanda:  // Coanda has mode dependent positionss
+      switch (mode) {
+        case stdAc::opmode_t::kCool: return stdAc::swingv_t::kHighest;
+        case stdAc::opmode_t::kHeat: return stdAc::swingv_t::kLowest;
+        default:                     return stdAc::swingv_t::kOff;
+      }
+    case kSharpAcSwingVToggle: return stdAc::swingv_t::kAuto;
+    default:                   return stdAc::swingv_t::kOff;
+  }
+}
+
+/// Convert the current internal state into its stdAc::state_t equivalent.
+/// @param[in] prev Ptr to the previous state if required.
+/// @return The stdAc equivalent of the native settings.
+stdAc::state_t IRSharpAc::toCommon(const stdAc::state_t *prev) const {
+  stdAc::state_t result{};
+  // Start with the previous state if given it.
+  if (prev != NULL) result = *prev;
   result.protocol = decode_type_t::SHARP_AC;
-  result.model = -1;  // Not supported.
-  result.power = this->getPower();
-  result.mode = this->toCommonMode(this->getMode());
+  result.model = getModel();
+  result.power = getPower();
+  result.mode = toCommonMode(_.Mode);
   result.celsius = true;
-  result.degrees = this->getTemp();
-  result.fanspeed = this->toCommonFanSpeed(this->getFan());
-  result.turbo = this->getTurbo();
-  result.swingv = this->getSwingToggle() ? stdAc::swingv_t::kAuto
-                                         : stdAc::swingv_t::kOff;
-  result.filter = this->getIon();
-  result.econo = this->getEconoToggle();
-  result.clean = this->getClean();
+  result.degrees = getTemp();
+  result.fanspeed = toCommonFanSpeed(_.Fan);
+  result.turbo = getTurbo();
+  if (getSwingV() != kSharpAcSwingVIgnore)
+    result.swingv = toCommonSwingV(getSwingV(), result.mode);
+  result.filter = _.Ion;
+  result.econo = getEconoToggle();
+  result.light = getLightToggle();
+  result.clean = _.Clean;
   // Not supported.
   result.swingh = stdAc::swingh_t::kOff;
   result.quiet = false;
   result.beep = false;
-  result.light = false;
   result.sleep = -1;
   result.clock = -1;
   return result;
@@ -687,25 +865,71 @@ stdAc::state_t IRSharpAc::toCommon(void) {
 
 /// Convert the current internal state into a human readable string.
 /// @return A human readable string.
-String IRSharpAc::toString(void) {
+String IRSharpAc::toString(void) const {
   String result = "";
-  result.reserve(135);  // Reserve some heap for the string to reduce fragging.
-  result += addLabeledString(isPowerSpecial() ? "-"
-                                              : (getPower() ? kOnStr : kOffStr),
-                             kPowerStr, false);
-  result += addModeToString(getMode(), kSharpAcAuto, kSharpAcCool, kSharpAcHeat,
-                            kSharpAcDry, kSharpAcAuto);
+  const sharp_ac_remote_model_t model = getModel();
+  result.reserve(170);  // Reserve some heap for the string to reduce fragging.
+  result += addModelToString(decode_type_t::SHARP_AC, getModel(), false);
+
+  result += addLabeledString(isPowerSpecial() ? String("-")
+                                              : String(getPower() ? kOnStr
+                                                                  : kOffStr),
+                             kPowerStr);
+  const uint8_t mode = _.Mode;
+  result += addModeToString(
+      mode,
+      // Make the value invalid if the model doesn't support an Auto mode.
+      (model == sharp_ac_remote_model_t::A907) ? kSharpAcAuto : 255,
+      kSharpAcCool, kSharpAcHeat, kSharpAcDry, kSharpAcFan);
   result += addTempToString(getTemp());
-  result += addFanToString(getFan(), kSharpAcFanMax, kSharpAcFanMin,
-                           kSharpAcFanAuto, kSharpAcFanAuto, kSharpAcFanMed);
+  switch (model) {
+    case sharp_ac_remote_model_t::A705:
+    case sharp_ac_remote_model_t::A903:
+      result += addFanToString(_.Fan, kSharpAcFanMax, kSharpAcFanA705Low,
+                               kSharpAcFanAuto, kSharpAcFanAuto,
+                               kSharpAcFanA705Med);
+      break;
+    default:
+      result += addFanToString(_.Fan, kSharpAcFanMax, kSharpAcFanMin,
+                               kSharpAcFanAuto, kSharpAcFanAuto,
+                               kSharpAcFanMed);
+  }
+  if (getSwingV() == kSharpAcSwingVIgnore) {
+    result += addIntToString(kSharpAcSwingVIgnore, kSwingVStr);
+    result += kSpaceLBraceStr;
+    result += kNAStr;
+    result += ')';
+  } else {
+    result += addSwingVToString(
+        getSwingV(), 0xFF,
+        // Coanda means Highest when in Cool mode.
+        (mode == kSharpAcCool) ? kSharpAcSwingVCoanda : kSharpAcSwingVToggle,
+        kSharpAcSwingVHigh,
+        0xFF,  // Upper Middle is unused
+        kSharpAcSwingVMid,
+        0xFF,  // Lower Middle is unused
+        kSharpAcSwingVLow,
+        kSharpAcSwingVCoanda,
+        kSharpAcSwingVOff,
+        // Below are unused.
+        kSharpAcSwingVToggle,
+        0xFF,
+        0xFF);
+  }
   result += addBoolToString(getTurbo(), kTurboStr);
-  result += addBoolToString(getSwingToggle(), kSwingVToggleStr);
-  result += addBoolToString(getIon(), kIonStr);
-  result += addLabeledString(getEconoToggle() ? kToggleStr : "-", kEconoStr);
-  result += addBoolToString(getClean(), kCleanStr);
-  if (getTimerEnabled())
+  result += addBoolToString(_.Ion, kIonStr);
+  switch (model) {
+    case sharp_ac_remote_model_t::A705:
+    case sharp_ac_remote_model_t::A903:
+      result += addToggleToString(getLightToggle(), kLightStr);
+      break;
+    default:
+      result += addToggleToString(getEconoToggle(), kEconoStr);
+  }
+  result += addBoolToString(_.Clean, kCleanStr);
+  if (_.TimerEnabled)
     result += addLabeledString(minsToString(getTimerTime()),
-                               getTimerType() ? kOnTimerStr : kOffTimerStr);
+                               _.TimerType ? kOnTimerStr : kOffTimerStr);
   return result;
 }
 

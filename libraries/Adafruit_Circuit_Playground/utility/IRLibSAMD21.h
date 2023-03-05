@@ -67,8 +67,11 @@
 #define IR_SEND_PWM_PIN 12
 //#define IR_SEND_PWM_PIN 13
 //Override default for Adafruit Circuit Playground Express
-#ifdef ADAFRUIT_CIRCUITPLAYGROUND_M0 
-  #define IR_SEND_PWM_PIN 29
+#ifdef ARDUINO_SAMD_CIRCUITPLAYGROUND_EXPRESS
+  #ifdef IR_SEND_PWM_PIN
+    #undef IR_SEND_PWM_PIN
+  #endif
+  #define IR_SEND_PWM_PIN 25
 #endif
 //Choose which timer counter to use for the 50 microsecond interrupt
 //Un-comment only one of these.
@@ -80,6 +83,13 @@
  * Everything below this point should not be changed. It computes needed defines
  * based on the user set values above.
  */
+
+//Clear interrupt
+#ifdef IR_CLEAR_INTERRUPT
+  #undef IR_CLEAR_INTERRUPT
+#endif
+#define IR_CLEAR_INTERRUPT 	IR_TCx->COUNT16.INTFLAG.bit.MC0 = 1;
+
 
 // Saves us a lot of typing when synchronizing
 #define syncTC   while (IR_TCx->COUNT16.STATUS.bit.SYNCBUSY)
@@ -185,7 +195,7 @@
   #define IR_MUX_EF PORT_PMUX_PMUXO_F 
   #define IR_CCx CC7
   #define IR_CCn 7
-#elif (IR_SEND_PWM_PIN==29)//Adafruit Circuit Playground Express only
+#elif (IR_SEND_PWM_PIN==25)//Adafruit Circuit Playground Express only
   //PA23 E:TC4-WO[1] F:TCC0-WO[5]
   #define IR_MUX_EF PORT_PMUX_PMUXO_F 
   #define IR_CCx CC5
@@ -230,8 +240,6 @@
 #define IR_RECV_DISABLE_INTR  IR_TCx->COUNT16.INTENCLR.reg = TC_INTENCLR_OVF;  
 #define IR_RECV_CONFIG_TICKS() initializeSAMD21timerInterrupt()
 
-//Clear interrupt
-#define IR_CLEAR_INTERRUPT 	IR_TCx->COUNT16.INTFLAG.bit.MC0 = 1;
 
 //prototypes
 void initializeSAMD21PWM(uint16_t khz);

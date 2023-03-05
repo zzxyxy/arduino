@@ -7,6 +7,9 @@
  * of these classes, rather you will use them as base classes in creating derived
  * protocol specific decoders.
  */
+
+#if !defined(ARDUINO_NRF52840_CIRCUITPLAY)
+
 #include "IRLibDecodeBase.h"
 #include "IRLibHardware.h"
 
@@ -120,6 +123,23 @@ bool IRdecodeBase::decodeGeneric(uint8_t expectedLength,
   return true;
 }
 
+/* 
+ * These MATCH methods used to be macros but we saved nearly
+ * 800 bytes of program space by making them actual methods.
+ */
+ 
+bool IRdecodeBase::MATCH(int16_t val,int16_t expected){
+#ifdef IRLIB_USE_PERCENT
+  return (val >= (uint16_t)(expected*(1.0-PERCENT_TOLERANCE/100.0)))
+      && (val <= (uint16_t)(expected*(1.0+PERCENT_TOLERANCE/100.0))); 
+#else
+  return  ABS_MATCH(val,expected,DEFAULT_ABS_TOLERANCE);
+#endif
+}
+bool IRdecodeBase::ABS_MATCH(int16_t val,int16_t expected,int16_t tolerance){
+  return  (val >= (expected-tolerance)) && (val <= (expected+tolerance));
+}
+
 /*
  * The RC5 and RC6 and similar protocols used phase encoding and leave a 
  * routine to extract zeros and ones. This routine gets one undecoded 
@@ -163,3 +183,5 @@ IRdecodeRC::RCLevel IRdecodeRC::getRClevel(uint8_t *used, const uint16_t t1) {
   }
   return val;   
 }
+
+#endif //!defined(__NRF52) 

@@ -1,9 +1,407 @@
 # Release Notes
 
+## _v2.8.4 (20220918)_
+
+**[Bug Fixes]**
+ - [Bugfix] Handle gcc unsupported __VA_OPT___ macro (#1880 #1881)
+
+
+## _v2.8.3 (20220915)_
+
+**[Bug Fixes]**
+- Fix `#if` for DECODE_COOLIX48 (#1796)
+- Add missing `prev`s to `decodeToState()` (#1783)
+
+**[Features]**
+- Add `pause()` function to ESP32 when receiving. (#1871)
+- ARGO: Argo add `sendSensorTemp()` (#1858 #1859)
+- HAIER_AC160: Experimental detail support. (#1852 #1804)
+- BOSCH144: Add IRac class support (#1841)
+- Mitsubishi_AC: update left vane in `IRac` class (#1837)
+- Basic support for Daikin 312bit/39byte A/C protocol. (#1836 #1829)
+- Experimental basic support for Sanyo AC 152 bit protocol. (#1828 #1826)
+- GREE: Add model support for `YX1FSF`/Soleus Air Windown A/C (#1823 #1821)
+- Experimental basic support for Bosch 144bit protocol. (#1822 #1787)
+- Experimental basic support for TCL AC 96 bit protocol. (#1820 #1810)
+- Add basic support for clima-butler (52bit) RCS-SD43UWI (#1815 #1812)
+- TOTO: An experimental _(s)wipe_ at support for Toto Toilets. (#1811 #1806)
+- CARRIER_AC128: Experimental Basic support for Carrier AC 128bit protocol. (#1798 #1797)
+- HAIER_AC160: Add basic support for Haier 160bit protocol. (#1805 #1804)
+- DAIKIN: Add basic support for 200-bit Daikin protocol. (#1803 #1802)
+- FUJITSU: Improve handling of 10C Heat mode. (#1788 #1780)
+- FUJITSU: Improve handling of short (command only) messages. (#1784 #1780)
+
+**[Misc]**
+- Improve the `_IRREMOTEESP8266_VERSION_VAL` macro (#1875 #1870)
+- SONY: Update supported devices. (#1872)
+- SAMSUNG: Update supported devices (#1873)
+- NEC: Update supported devices (#1874)
+- Give IRmacros.h smaller scope to avoid impacting projects using IRremoteESP8266 (#1857 #1853 #1851)
+- Inhibit protocol names for not-included protocols (#1853 #1851)
+- Test out codeql static analysis (#1842)
+- Remove pylint disable=no-self-use (#1817)
+- Fujitsu General: update supported devices (#1813)
+- DAIKIN: Update supported devices (#1808 #1807)
+- Fujitsu: Update supported remote info. (#1801 #1794)
+- DAIKIN128: Update supported devices (#1754)
+- Voltas: Add link to manual for 122LZF A/C. (#1800 #1799 #1238)
+- Daikin128: Additional unit test. (#1795 #1754)
+- MIDEA: Update supported devices (#1791 #1790)
+
+
+## _v2.8.2 (20220314)_
+
+**[Bug Fixes]**
+- ESP32-C3: Fix reboot/crashes on ESP32-C3s when receiving. (#1768 #1751)
+
+**[Features]**
+- HITACHI_AC296: Add `IRac` class support & tests. (#1776 #1758 #1757)
+- Support for Hitachi RAS-70YHA3 (remote RAR-3U3) (#1758 #1757)
+- LG: Add Swing Toggle support for Model `LG6711A20083V` (#1771 #1770)
+- IRMQTTServer: add `MQTT_SERVER_AUTODETECT_ENABLE` via mqtt mDNS (#1769)
+- Experimental basic support for Kelon 168 bit / 21 byte protocol. (#1747 #1745 #1744)
+- MitsubishiAC: Tweak repeat gap timing. (#1760 #1759)
+- Gree YAP0F8 (Detected as Kelvinator) vertical position set support (#1756)
+- Make KELON (48 bit) protocol decoding stricter. (#1746 #1744)
+- IRMQTTServer V1.6.1 (#1740 #1739 #1729)
+- HITACHI_AC264: Add minimal detailed support. (#1735 #1729)
+- LG2: Improve Light toggle msg handling. (#1738 #1737)
+- MIDEA: Add support for Quiet, Clean & Freeze Protect controls. (#1734 #1733)
+- Add basic support for HITACHI_AC264 264bit protocol. (#1730 #1729)
+- ESP32-C3: Work around for some C3 specific compiler issues again. (#1732 #1695)
+
+**[Misc]**
+- MIDEA: Update supported devices (#1774 #1773 #1716)
+- Update devices supported by ELECTRA_AC (#1766 #1765)
+- Improve documentation for `encodePioneer()` (#1761 #1749)
+- Update (un)supported DAIKIN128 devices. (#1752)
+- Refactor `decodeCOOLIX()` code & add another test case. (#1750 #1748)
+- Simplify code based on state_t being initialised by default. (#1736 #1699)
+- Add comments to help Teknopoint users. (#1731 #1728)
+- Fix library version string calculation. (#1727 #1725)
+- Confirm we can reproduce `TurnOnFujitsuAC.ino` via IRac/IRMQTTServer. (#1726 #1701)
+
+
+## _v2.8.1 (20220101)_
+
+**[Bug Fixes]**
+- Arduino ESP32 Core v2.0.2+ crashes due to our timer hack. (#1715 #1713)
+- SONY: Fix old Sony CD-Player Remote (12 Bit) (#1714)
+
+**[Features]**
+- Add tool to convert protocol & code to raw timing info. (#1708 #1707 #1703)
+- Add basic support for COOLIX48 protocol. (#1697 #1694)
+- MITSUBISHI_AC: Added support for i-SAVE mode. (#1666)
+- TOSHIBA_AC: Add Filter setting support. aka. Pure. (#1693 #1692)
+- Airton: Add detailed A/C support. (#1688 #1670)
+
+**[Misc]**
+- Add a structured library version number. (#1717)
+- Workflows Split UnitTests (#1712)
+- Reduce time for workflow/Build (#1709)
+- Fix some compiler & linter warnings (#1699 #1700)
+- Fujitsu: Update supported A/C models (#1690 #1689 #1702 #1701)
+- Remove extra `const` qualifier for char pointer (#1704)
+- TCL: Update supported devices. (#1698)
+- ESP32-C3: Work around for some C3 specific compiler issues. (#1696 #1695)
+
+
+## _v2.8.0 (20211119)_
+
+**[Bug Fixes]**
+- Fix compilation issue when using old 8266 Arduino Frameworks. (#1639 #1640)
+- Fix potential security issue with `scrape_supported_devices.py` (#1616 #1619)
+
+**[Features]**
+- SAMSUNG_AC
+  - Change `clean` setting to a toggle. (#1676 #1677)
+  - Highest fan speed is available without Powerful setting. (#1675 #1678)
+  - Change `beep` setting to a toggle. (#1669 #1671)
+  - Fix Beep for AR12TXEAAWKNEU (#1668 #1669)
+  - Add support for Horizontal Swing & Econo (#1277 #1667)
+  - Add support for On, Off, & Sleep Timers (#1277 #1662)
+  - Fix power control. Clean-up code & bitmaps from Checksum changes. (#1277 #1648 #1650)
+- HAIER_AC176/HAIER_AC_YRW02
+  - Add support A/B unit setting (#1672)
+  - Add support degree Fahrenheit (#1659)
+  - Add support `Lock` function (#1652)
+  - Implement horizontal swing feature (#1641)
+  - Implement Quiet setting. (#1634 #1635)
+- Basic support for Airton Protocol (#1670 #1681)
+- HAIER_AC176: Add Turbo and Quiet settings (#1634)
+- Gree: Add `SwingH` & `Econo` control. (#1587 #1653)
+- MIRAGE
+  - Add experimental detailed support. (#1573 #1615)
+  - Experimental detailed support for KKG29A-C1 remote. (#1573 #1660)
+- ELECTRA_AC: Add support for "IFeel" & Sensor settings. (#1644 #1645)
+- Add Russian translation (#1649)
+- Add Swedish translation (#1627)
+- Reduce flash space used. (#1633)
+- Strings finally in Flash! (#1493 #1614 #1623)
+- Add support for Rhoss Idrowall MPCV 20-30-35-40 A/C protocol (#1630)
+- Make `IRAc::opmodeToString()` output nicer for humans. (#1613)
+- TCL112AC/TEKNOPOINT: Add support for `GZ055BE1` model (#1486 #1602)
+- Support for Arris protocol. (#1598)
+- SharpAc: Allow position control of SwingV (#1590 #1594)
+
+**[Misc]**
+- HAIER_AC176/HAIER_AC_YRW02
+  - Replace some magic numbers with constants (#1679)
+  - Small fix `Quiet` and `Turbo` test (#1674)
+  - Fix `IRHaierAC176::getTemp()` return value description (#1663)
+- Security Policy creation and changes. (#1616 #1617 #1618 #1621 #1680)
+- IRrecvDumpV2/3: Update PlatformIO envs for missing languages (#1661)
+- IRMQTTServer
+  - Use the correct string for Fan mode in Home Assistant. (#1610 #1657)
+  - Move a lot of the strings/text to flash. (#1638)
+- Minor code style improvements. (#1656)
+- Update Supported Devices
+  - HAIER_AC176 (#1673)
+  - LG A/C (#1651 #1655)
+  - Symphony (#1603 #1605)
+  - Epson (#1574 #1601)
+  - GREE (#1587 #1588)
+  - SharpAc (#1590 #1591)
+- Add extra tests for LG2 protocol (#1654)
+- Fix parameter expansion in several macros.
+- Move some strings to `IRtext.cpp` & `locale/default.h` (#1637)
+- RHOSS: Move include and defines to their correct places (#1636)
+- Make makefile only build required files when running `run-%` target (#1632)
+- Update Portuguese translation (#1628)
+- Add possibility to run specific test case (#1625)
+- Change `googletest` library ignore (#1626)
+- Re-work "Fan Only" strings & matching. (#1610)
+- Address `C0209` pylint warnings. (#1608)
+
+
+## _v2.7.20 (20210828)_
+
+**[Bug Fixes]**
+- Make `strToSwingH()` match "Right Max" (#1550 #1551)
+
+**[Features]**
+- Experimental Bose remote support (#1579)
+- Added MitsubishiAC VaneLeft (#1572 #1576)
+- HAIER_AC176: Add experimental detailed support (#1480 #1571)
+- Detailed support for Tornado/Sanyo 88-bit A/C protocol (#1503 #1568)
+- Add support for new `TROTEC_3550` A/C protocol (#1563 #1566 #1507)
+- SamsungAc: Use `sendExtended()` going forward. (#1484 #1562)
+- SamsungAc: Redo/fix checksum calculations. (#1538 #1554)
+- LG: Add support for `AKB73757604` model (#1531 #1545)
+- Daikin176: Add support for Unit Id. (#1543 #1544)
+- Daikin2: Add support for Humidity setting/operation. (#1535 #1540)
+- TCL112AC: Add support for quiet/mute setting. (#1528 #1529)
+- LG2: Add Fan speed, Swing, & Light support for new `AKB74955603` model (#1513 #1530)
+- Add Mitsubishi AC "fan only" mode (#1527)
+
+**[Misc]**
+- Change when some github workflows run (#1583)
+- Add/update supported device info (#1580 #1581 #1585)
+- Fix pylint issues due to pylint update. (#1569 #1570)
+- DAIKIN216: Update supported models. (#1552 #1567)
+- IRMQTTServer: Build a minimal OTA image via PlatformIO. (#1513 #1541)
+- Reduce memory fragmentation cause by String usage. (#1493 #1536)
+- Refactor `decodeMitsubishiAC()` (#1523 #1532)
+- Fix incorrect comment.
+- Migrate from Travis to GitHub Actions (#1522 #1526)
+- Documentation update with additional supported Panasonic AC models (#1525)
+
+
+## _v2.7.19 (20210706)_
+
+**[Bug Fixes]**
+- Illegal Heap write in rawbuf when the capture has overflowed. (#1516 #1517)
+- PANASONIC_AC: Fix Low and High fan speeds (#1515)
+- Fix MDNS in IRServer and IRMQTTServer example code (#1498 #1499)
+- IRac: Fix off-by-one error in Coolix's sleep setting. (#1500)
+- Fix undefined constant (#1490)
+
+**[Features]**
+- Add detailed support for Kelon ACs (#1494)
+- Experimental basic support for Teknopoint A/C protocol (#1486 #1504)
+- Daikin64: Add support for Heat mode (#1492)
+- Basic support for `HAIER_AC176` 176 bit protocol. (#1480 #1481)
+
+**[Misc]**
+- GREE: Update inter-message gap timing (#1508 #1509)
+- IRac: Change Coolix to send special messages after a normal message. (#1501 #1502)
+- Fix compiler warnings causing Travis failures. (#1491)
+- Update supported model info (#1477 #1485 #1488 #1489)
+- Add HTML viewport meta tag to IRServer and IRMQTTServer examples (#1467 #1469)
+
+
+## _v2.7.18 (20210420)_
+
+**[Misc]**
+- Attempt to fix issues with installing the library under the Arduino IDE on Win10 & OSX (#1451 #1464)
+- Reduce the library's github zip download size. (#1451 #1463)
+- An experiment in using Github Actions to do some of the CI work. (#1462)
+
+
+## _v2.7.17 (20210418)_
+
+**[News]**
+- The library now supports 100 IR protocols! \o/
+
+**[Bug Fixes]**
+- Fix `IRAcUtils::decodeToState()` for different length Samsung msgs (#1447 #1448)
+
+**[Features]**
+- Fujitsu: Add support for `ARREW4E` model. (#1455 #1456)
+- Experimental detailed support for Truma A/Cs. (#1440 #1449)
+
+**[Misc]**
+- Fix Arduino library linter issues. (#1451 #1452 #1453 #1460)
+- Reduce the library's zip download size. (#1451 #1463)
+- An experiment in using Github Actions to do some of the CI work. (#1462)
+
+
+## _v2.7.16 (20210324)_
+
+**[Features]**
+- ToshibaAC: Swing handling and `setRaw()` improvements. (#1423 #1424 #1425)
+- Support for XMP (Xfinity) protocol. (#1414 #1422)
+- ToshibaAC: Adjust inter-message gap timing to improve matching. (#1420 #1421)
+- Ecoclim: Add detailed A/C support (#1397 #1415)
+
+**[Misc]**
+- [ESP32] Fix `addApbChangeCallback(): duplicate func` kernel msgs (#1434 #1435)
+- refactor ir_Fujitsu (#1419)
+- refactor ir_Whirlpool (#1416)
+- refactor ir_Vestel (#1413)
+- refactor ir_Trotec (#1412)
+
+
+## _v2.7.15 (20210213)_
+
+**[BREAKING CHANGES]**
+- Some Daikin2 constants have been changed. (#1393)
+
+**[Features]**
+- Experimental basic support for EcoClim 56 & 15 bit protocols. (#1397 #1410)
+- MITSUBISHI_AC: Add support for enabling Weekly Timer. (#1403 #1404)
+- Mitsubishi ACs: Improve handling swing/vane settings. (#1399 #1401)
+- MITSUBISHI_AC: Add support for half degrees. (#1398 #1400)
+- Add `irutils::addSwing[V|H]ToString()` and adjust some constants (#1365 #1393)
+- SharpAc: Add support for model A903, and improve `IRac` fan & power control. (#1387 #1390)
+- Experimental support for Milestag2 (#1360 #1380)
+
+**[Misc]**
+- Improve `IRac::sendAc()` documentation. (#1408 #1409)
+- refactor ir_Transcold (#1407)
+- refactor ir_Toshiba (#1395)
+- Fix Travis-CI build issues. (#1396)
+- refactor ir_Teco (#1392)
+- Fujitsu A/C: Add warning/suggestions for AR-RAH1U devices (#1376 #1386)
+- refactor ir_Technibel (#1385)
+- Add the new logo and banner :tada: (#1371 #1372)
+- Update references to sbprojects website. (#1381 #1383)
+- refactor ir_Tcl (#1379)
+
+
+## _v2.7.14 (20210103)_
+
+**[Bug Fixes]**
+- SanyoAc: Fix Sensor Location error (#1359)
+- IRMQTTServer: Compiler error under PlatformIO on Windows. (#1353 #1354)
+- Workaround for ESP32 hw timer library calls not in IRAM. (#1350 #1351)
+
+**[Features]**
+- PANASONIC_AC32: Add limited detailed support. (#1364 #1366)
+- Move global vars in IRrecv into a namespace. (#1350 #1352)
+- Fujitsu: Handle toggles of Econo & Turbo when `IRac` interface is used. (#1334 #1345)
+
+**[Misc]**
+- Elitescreens: Update supported brands/models (#1375)
+- refactor ir_Sharp (#1374)
+- refactor ir_Sanyo (#1359)
+- Gree: List Amana as supported. (#1361 #1363)
+- Lasertag: Increase matching tolerance. (#1360 #1362)
+- refactor ir_Samsung (#1358)
+- refactor ir_Neoclima (#1349)
+- Update issue templates (#1348 #1355)
+- Midea: Update supported devices & add notes for an odd Pioneer System. (#1342 #1344)
+- Kelvinator: Update supported models. (#1335 #1346)
+
+
+## _v2.7.13 (20201125)_
+
+**[Bug Fixes]**
+- Fix crash when IRac::sendAc(state_t, *state_t) called with SAMSUNG_AC & NULL (#1341 #1339)
+- Mitsubishi112 & 136: `setSwingV()` incorrectly sets mode. (#1337)
+- Typo preventing RC6 from compiling when other protocols disabled. (#1332 #1331)
+
+**[Features]**
+- Coolix: Improve Sensor(ZoneFollow) and add Vane Step support. (#1340 #1318)
+
+**[Misc]**
+- refactor ir_Coolix (#1340)
+- refactor ir_Mitsubishi (#1336)
+- refactor ir_MitsubishiHeavy (#1333)
+
+
+## _v2.7.12 (20201113)_
+
+**[Bug Fixes]**
+- `defaultBits()` returned incorrect result for `PANASONIC_AC` (#1307 #1314)
+- Fix LG2 timings and refactor `decodeLG()` (#1298 #1304)
+
+**[Features]**
+- Midea: Add support for "Follow Me"/Sensor, Turbo, Light, & Timers (#1318 #1327)
+- SharpAc: Add model support for A705 (#1309 #1313)
+- Add basic support for Panasonic A/C 32bit/16bit protocol. (#1307 #1316)
+- Add support for Elite Screens protocol. (#1306 #1310)
+- IRrecvDumpV2+: Add tolerance setting. (#1292)
+- Add basic support for the Mirage Protocol. (#1289 #1291)
+- Internationalisation Support
+  - pt-BR: Add Portuguese/Brazilian support. (#1303)
+  - de-DE: Backfill missing strings (#1294)
+  - de-DE: update for recent addition of 'tolerance' (#1293)
+  - de-DE: Translate root README.md into German (#1297)
+
+**[Misc]**
+- refactor ir_LG (#1325)
+- refactor ir_Kelvinator (#1317)
+- refactor ir_Hitachi (#1308)
+- refactor ir_Goodweather (#1295)
+- refactor ir_Electra (#1290)
+- refactor ir_Daikin (#1288)
+- Update Kaysun supported models. (#1322)
+- fix typos/spelling mistakes (#1301)
+- Add some missing Doxygen class/data-type descriptions. (#1287)
+
+
+## _v2.7.11 (20201002)_
+
+**[Features]**
+- Transcold: Add detailed support. (#1256 #1278)
+- Airwell/Whirlpool: Add handling of previous state to `.toCommon()` (#1275 #1276)
+- IRMQTTServer: Change how MQTT packet/buffer size is set. (#1271)
+- Fujitsu: Add support for timers. (#1255 #1261 #1262)
+- Neoclima: Add Economy & Fahrenheit support (#1260 #1265)
+- Technibel: Cleanup and code fixes/improvements. (#1259 #1266)
+- Technibel: Add detailed A/C support (#1259)
+- Transcold: Add basic support. (#1256 #1258)
+
+**[Misc]**
+- refactor ir_Delonghi (#1285)
+- Whirlpool: Change default mode in `convertMode()` (#1283 #1284)
+- SamsungAC: Unit tests to help debug poor signal (#1277 #1280)
+- Add question & note about VS1838b use to issue template. (#1281)
+- rewrite ir_Corona (#1274)
+- tools/mkkeywords: Fix minor parsing issue. (#1272)
+- Add Zhongxian Li to Contributers.md (#1270)
+- rewrite Carrier (#1269)
+- rewrite ir_Argo by using bit field (#1264)
+- rewrite ir_Amcor by using bit field (#1263)
+- Update Fujitsu supported model info.
+- Clarify the scope of the LittleFS breaking change.
+
+
 ## _v2.7.10 (20200831)_
 
 **[BREAKING CHANGES]**
-- move SPIFFS to LittleFS for ESP8266 (#1182 #1226)
+- IRMQTTServer & Web-AC-Control: move SPIFFS to LittleFS for ESP8266 (#1182 #1226)
 - Daikin176: Change & increase operating mode values. (#1233 #1235)
 
 **[Bug Fixes]**

@@ -16,6 +16,7 @@ uint16_t          addr = 0;
 
 void setup(void) {
   Serial.begin(9600);
+  while (!Serial) delay(10);     // will pause Zero, Leonardo, etc until serial console opens
   
   if (fram.begin()) {
     Serial.println("Found SPI FRAM");

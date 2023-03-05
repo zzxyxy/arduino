@@ -1,5 +1,8 @@
 var searchData=
 [
-  ['wand_5fid_7296',['wand_id',['../unionmagiquest.html#a1b159cd47635d548e1d4198cd6d41e93',1,'magiquest']]],
-  ['wifi_7297',['Wifi',['../unionVoltasProtocol.html#aae1406825a156f159c5ad4b28d20364c',1,'VoltasProtocol::Wifi()'],['../unionGreeProtocol.html#a6cf8e0a6c54a5d2b6f14074c6f3dcc92',1,'GreeProtocol::WiFi()']]]
+  ['value_8281',['value',['../classdecode__results.html#a033502b7a6b4b0412e5a2062e33c5f47',1,'decode_results']]],
+  ['vane_8282',['Vane',['../unionMitsubishi144Protocol.html#af4cb685d4c5f87f6ff61d1305ccd6967',1,'Mitsubishi144Protocol']]],
+  ['vanebit_8283',['VaneBit',['../unionMitsubishi144Protocol.html#aaefd53cd1441b57b90dc3d21488bbdd3',1,'Mitsubishi144Protocol']]],
+  ['vaneleft_8284',['VaneLeft',['../unionMitsubishi144Protocol.html#ad6baa7043bc16fb46f1f4f0ebe45328a',1,'Mitsubishi144Protocol']]],
+  ['vent_8285',['Vent',['../unionAmcorProtocol.html#a289bcba64f01cd2c847845f41978d400',1,'AmcorProtocol']]]
 ];

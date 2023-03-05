@@ -38,8 +38,13 @@ using irutils::addModeToString;
 using irutils::addModelToString;
 using irutils::addTempToString;
 using irutils::minsToString;
-using irutils::setBit;
-using irutils::setBits;
+
+#define GETTIME(x) (_.x##Hours * 60 + _.x##Mins)
+#define SETTIME(x, n) do { \
+  uint16_t mins = n;\
+  _.x##Hours = (mins / 60) % 24;\
+  _.x##Mins = mins % 60;\
+} while (0)
 
 #if SEND_WHIRLPOOL_AC
 /// Send a Whirlpool A/C message.
@@ -83,15 +88,15 @@ void IRsend::sendWhirlpoolAC(const unsigned char data[], const uint16_t nbytes,
 /// @param[in] use_modulation Is frequency modulation to be used?
 IRWhirlpoolAc::IRWhirlpoolAc(const uint16_t pin, const bool inverted,
                              const bool use_modulation)
-    : _irsend(pin, inverted, use_modulation) { this->stateReset(); }
+    : _irsend(pin, inverted, use_modulation) { stateReset(); }
 
 /// Reset the state of the remote to a known good state/sequence.
 void IRWhirlpoolAc::stateReset(void) {
-  for (uint8_t i = 2; i < kWhirlpoolAcStateLength; i++) remote_state[i] = 0x0;
-  remote_state[0] = 0x83;
-  remote_state[1] = 0x06;
-  remote_state[6] = 0x80;
-  this->_setTemp(kWhirlpoolAcAutoTemp);  // Default to a sane value.
+  for (uint8_t i = 2; i < kWhirlpoolAcStateLength; i++) _.raw[i] = 0x0;
+  _.raw[0] = 0x83;
+  _.raw[1] = 0x06;
+  _.raw[6] = 0x80;
+  _setTemp(kWhirlpoolAcAutoTemp);  // Default to a sane value.
 }
 
 /// Set up hardware to be able to send a message.
@@ -124,11 +129,9 @@ bool IRWhirlpoolAc::validChecksum(const uint8_t state[],
 /// @param[in] length The length/size of the internal state array.
 void IRWhirlpoolAc::checksum(uint16_t length) {
   if (length >= kWhirlpoolAcChecksumByte1)
-    remote_state[kWhirlpoolAcChecksumByte1] =
-        xorBytes(remote_state + 2, kWhirlpoolAcChecksumByte1 - 1 - 2);
+    _.Sum1 = xorBytes(_.raw + 2, kWhirlpoolAcChecksumByte1 - 1 - 2);
   if (length >= kWhirlpoolAcChecksumByte2)
-    remote_state[kWhirlpoolAcChecksumByte2] =
-        xorBytes(remote_state + kWhirlpoolAcChecksumByte1 + 1,
+    _.Sum2 = xorBytes(_.raw + kWhirlpoolAcChecksumByte1 + 1,
                  kWhirlpoolAcChecksumByte2 - kWhirlpoolAcChecksumByte1 - 1);
 }
 
@@ -137,8 +140,8 @@ void IRWhirlpoolAc::checksum(uint16_t length) {
 /// @param[in] repeat Nr. of times the message will be repeated.
 /// @param[in] calcchecksum Do we need to calculate the checksum?.
 void IRWhirlpoolAc::send(const uint16_t repeat, const bool calcchecksum) {
-  if (calcchecksum) this->checksum();
-  _irsend.sendWhirlpoolAC(remote_state, kWhirlpoolAcStateLength, repeat);
+  _irsend.sendWhirlpoolAC(getRaw(calcchecksum), kWhirlpoolAcStateLength,
+                          repeat);
 }
 #endif  // SEND_WHIRLPOOL_AC
 
@@ -146,21 +149,21 @@ void IRWhirlpoolAc::send(const uint16_t repeat, const bool calcchecksum) {
 /// @param[in] calcchecksum Do we need to calculate the checksum?.
 /// @return A code for this protocol based on the current internal state.
 uint8_t *IRWhirlpoolAc::getRaw(const bool calcchecksum) {
-  if (calcchecksum) this->checksum();
-  return remote_state;
+  if (calcchecksum) checksum();
+  return _.raw;
 }
 
 /// Set the internal state from a valid code for this protocol.
 /// @param[in] new_code A valid code for this protocol.
 /// @param[in] length The length/size of the new_code array.
 void IRWhirlpoolAc::setRaw(const uint8_t new_code[], const uint16_t length) {
-  memcpy(remote_state, new_code, std::min(length, kWhirlpoolAcStateLength));
+  std::memcpy(_.raw, new_code, std::min(length, kWhirlpoolAcStateLength));
 }
 
 /// Get/Detect the model of the A/C.
 /// @return The enum of the compatible model.
-whirlpool_ac_remote_model_t IRWhirlpoolAc::getModel(void) {
-  if (GETBIT8(remote_state[kWhirlpoolAcAltTempPos], kWhirlpoolAcAltTempOffset))
+whirlpool_ac_remote_model_t IRWhirlpoolAc::getModel(void) const {
+  if (_.J191)
     return DG11J191;
   else
     return DG11J13A;
@@ -171,21 +174,20 @@ whirlpool_ac_remote_model_t IRWhirlpoolAc::getModel(void) {
 void IRWhirlpoolAc::setModel(const whirlpool_ac_remote_model_t model) {
   switch (model) {
     case DG11J191:
-      setBit(&remote_state[kWhirlpoolAcAltTempPos], kWhirlpoolAcAltTempOffset);
+      _.J191 = true;
       break;
     case DG11J13A:
       // FALL THRU
     default:
-      setBit(&remote_state[kWhirlpoolAcAltTempPos], kWhirlpoolAcAltTempOffset,
-             false);
+      _.J191 = false;
   }
-  this->_setTemp(_desiredtemp);  // Different models have different temp values.
+  _setTemp(_desiredtemp);  // Different models have different temp values.
 }
 
 /// Calculate the temp. offset in deg C for the current model.
 /// @return The temperature offset.
-int8_t IRWhirlpoolAc::getTempOffset(void) {
-  switch (this->getModel()) {
+int8_t IRWhirlpoolAc::getTempOffset(void) const {
+  switch (getModel()) {
     case whirlpool_ac_remote_model_t::DG11J191: return -2;
     default:                                    return 0;
   }
@@ -197,26 +199,24 @@ int8_t IRWhirlpoolAc::getTempOffset(void) {
 /// @note Internal use only.
 void IRWhirlpoolAc::_setTemp(const uint8_t temp, const bool remember) {
   if (remember) _desiredtemp = temp;
-  int8_t offset = this->getTempOffset();  // Cache the min temp for the model.
+  int8_t offset = getTempOffset();  // Cache the min temp for the model.
   uint8_t newtemp = std::max((uint8_t)(kWhirlpoolAcMinTemp + offset), temp);
   newtemp = std::min((uint8_t)(kWhirlpoolAcMaxTemp + offset), newtemp);
-  setBits(&remote_state[kWhirlpoolAcTempPos], kHighNibble, kNibbleSize,
-          newtemp - (kWhirlpoolAcMinTemp + offset));
+  _.Temp = newtemp - (kWhirlpoolAcMinTemp + offset);
 }
 
 /// Set the temperature.
 /// @param[in] temp The temperature in degrees celsius.
 void IRWhirlpoolAc::setTemp(const uint8_t temp) {
-  this->_setTemp(temp);
-  this->setSuper(false);  // Changing temp cancels Super/Jet mode.
-  this->setCommand(kWhirlpoolAcCommandTemp);
+  _setTemp(temp);
+  setSuper(false);  // Changing temp cancels Super/Jet mode.
+  _.Cmd = kWhirlpoolAcCommandTemp;
 }
 
 /// Get the current temperature setting.
 /// @return The current setting for temp. in degrees celsius.
-uint8_t IRWhirlpoolAc::getTemp(void) {
-  return GETBITS8(remote_state[kWhirlpoolAcTempPos], kHighNibble, kNibbleSize) +
-      kWhirlpoolAcMinTemp + this->getTempOffset();
+uint8_t IRWhirlpoolAc::getTemp(void) const {
+  return _.Temp + kWhirlpoolAcMinTemp + getTempOffset();
 }
 
 /// Set the operating mode of the A/C.
@@ -225,36 +225,34 @@ uint8_t IRWhirlpoolAc::getTemp(void) {
 void IRWhirlpoolAc::_setMode(const uint8_t mode) {
   switch (mode) {
     case kWhirlpoolAcAuto:
-      this->setFan(kWhirlpoolAcFanAuto);
-      this->_setTemp(kWhirlpoolAcAutoTemp, false);
-      this->setSleep(false);  // Cancel sleep mode when in auto/6thsense mode.
+      setFan(kWhirlpoolAcFanAuto);
+      _setTemp(kWhirlpoolAcAutoTemp, false);
+      setSleep(false);  // Cancel sleep mode when in auto/6thsense mode.
       // FALL THRU
     case kWhirlpoolAcHeat:
     case kWhirlpoolAcCool:
     case kWhirlpoolAcDry:
     case kWhirlpoolAcFan:
-      setBits(&remote_state[kWhirlpoolAcModePos], kWhirlpoolAcModeOffset,
-              kModeBitsSize, mode);
-      this->setCommand(kWhirlpoolAcCommandMode);
+      _.Mode = mode;
+      _.Cmd = kWhirlpoolAcCommandMode;
       break;
     default:
       return;
   }
-  if (mode == kWhirlpoolAcAuto) this->setCommand(kWhirlpoolAcCommand6thSense);
+  if (mode == kWhirlpoolAcAuto) _.Cmd = kWhirlpoolAcCommand6thSense;
 }
 
 /// Set the operating mode of the A/C.
 /// @param[in] mode The desired operating mode.
 void IRWhirlpoolAc::setMode(const uint8_t mode) {
-    this->setSuper(false);  // Changing mode cancels Super/Jet mode.
-    this->_setMode(mode);
+    setSuper(false);  // Changing mode cancels Super/Jet mode.
+    _setMode(mode);
 }
 
 /// Get the operating mode setting of the A/C.
 /// @return The current operating mode setting.
-uint8_t IRWhirlpoolAc::getMode(void) {
-  return GETBITS8(remote_state[kWhirlpoolAcModePos], kWhirlpoolAcModeOffset,
-                  kModeBitsSize);
+uint8_t IRWhirlpoolAc::getMode(void) const {
+  return _.Mode;
 }
 
 /// Set the speed of the fan.
@@ -265,236 +263,196 @@ void IRWhirlpoolAc::setFan(const uint8_t speed) {
     case kWhirlpoolAcFanLow:
     case kWhirlpoolAcFanMedium:
     case kWhirlpoolAcFanHigh:
-      setBits(&remote_state[kWhirlpoolAcFanPos], kWhirlpoolAcFanOffset,
-              kWhirlpoolAcFanSize, speed);
-      this->setSuper(false);  // Changing fan speed cancels Super/Jet mode.
-      this->setCommand(kWhirlpoolAcCommandFanSpeed);
+      _.Fan = speed;
+      setSuper(false);  // Changing fan speed cancels Super/Jet mode.
+      _.Cmd = kWhirlpoolAcCommandFanSpeed;
       break;
   }
 }
 
 /// Get the current fan speed setting.
 /// @return The current fan speed/mode.
-uint8_t IRWhirlpoolAc::getFan(void) {
-  return GETBITS8(remote_state[kWhirlpoolAcFanPos], kWhirlpoolAcFanOffset,
-                  kWhirlpoolAcFanSize);
+uint8_t IRWhirlpoolAc::getFan(void) const {
+  return _.Fan;
 }
 
 /// Set the (vertical) swing setting of the A/C.
 /// @param[in] on true, the setting is on. false, the setting is off.
 void IRWhirlpoolAc::setSwing(const bool on) {
-  setBit(&remote_state[kWhirlpoolAcFanPos], kWhirlpoolAcSwing1Offset, on);
-  setBit(&remote_state[kWhirlpoolAcOffTimerPos], kWhirlpoolAcSwing2Offset, on);
-  setCommand(kWhirlpoolAcCommandSwing);
+  _.Swing1 = on;
+  _.Swing2 = on;
+  _.Cmd = kWhirlpoolAcCommandSwing;
 }
 
 /// Get the (vertical) swing setting of the A/C.
 /// @return true, the setting is on. false, the setting is off.
-bool IRWhirlpoolAc::getSwing(void) {
-  return GETBIT8(remote_state[kWhirlpoolAcFanPos], kWhirlpoolAcSwing1Offset) &&
-         GETBIT8(remote_state[kWhirlpoolAcOffTimerPos],
-                 kWhirlpoolAcSwing2Offset);
+bool IRWhirlpoolAc::getSwing(void) const {
+  return _.Swing1 && _.Swing2;
 }
 
 /// Set the Light (Display/LED) setting of the A/C.
 /// @param[in] on true, the setting is on. false, the setting is off.
 void IRWhirlpoolAc::setLight(const bool on) {
   // Cleared when on.
-  setBit(&remote_state[kWhirlpoolAcClockPos], kWhirlpoolAcLightOffset, !on);
+  _.LightOff = !on;
 }
 
 /// Get the Light (Display/LED) setting of the A/C.
 /// @return true, the setting is on. false, the setting is off.
-bool IRWhirlpoolAc::getLight(void) {
-  return !GETBIT8(remote_state[kWhirlpoolAcClockPos], kWhirlpoolAcLightOffset);
-}
-
-/// Set the time in nr. of minutes past midnight.
-/// @param[in] pos The byte offset to write to.
-/// @param[in] minspastmidnight Nr. of minutes past midnight.
-void IRWhirlpoolAc::setTime(const uint16_t pos,
-                            const uint16_t minspastmidnight) {
-  // Hours
-  setBits(&remote_state[pos], kWhirlpoolAcHourOffset, kWhirlpoolAcHourSize,
-          (minspastmidnight / 60) % 24);
-  // Minutes
-  setBits(&remote_state[pos + 1], kWhirlpoolAcMinuteOffset,
-          kWhirlpoolAcMinuteSize, minspastmidnight % 60);
-}
-
-/// Get the time in nr. of minutes past midnight.
-/// @param[in] pos The byte offset to read from.
-/// @return The time in Nr. of minutes past midnight.
-uint16_t IRWhirlpoolAc::getTime(const uint16_t pos) {
-  return GETBITS8(remote_state[pos], kWhirlpoolAcHourOffset,
-                  kWhirlpoolAcHourSize) * 60 +
-         GETBITS8(remote_state[pos + 1], kWhirlpoolAcMinuteOffset,
-                  kWhirlpoolAcMinuteSize);
-}
-
-/// Is the timer enabled at the given byte offset?
-/// @param[in] pos The byte offset to read from.
-/// @return true, the Timer is on. false, the Timer is off.
-bool IRWhirlpoolAc::isTimerEnabled(const uint16_t pos) {
-  return GETBIT8(remote_state[pos - 1], kWhirlpoolAcTimerEnableOffset);
-}
-
-/// Enable the timer enabled at the given byte offset.
-/// @param[in] pos The byte offset to write to.
-/// @param[in] on true, the timer is enabled. false, the timer is disabled.
-void IRWhirlpoolAc::enableTimer(const uint16_t pos, const bool on) {
-  setBit(&remote_state[pos - 1], kWhirlpoolAcTimerEnableOffset, on);
+bool IRWhirlpoolAc::getLight(void) const {
+  return !_.LightOff;
 }
 
 /// Set the clock time in nr. of minutes past midnight.
 /// @param[in] minspastmidnight The time expressed as minutes past midnight.
 void IRWhirlpoolAc::setClock(const uint16_t minspastmidnight) {
-  this->setTime(kWhirlpoolAcClockPos, minspastmidnight);
+  SETTIME(Clock, minspastmidnight);
 }
 
 /// Get the clock time in nr. of minutes past midnight.
 /// @return The time expressed as the Nr. of minutes past midnight.
-uint16_t IRWhirlpoolAc::getClock(void) {
-  return this->getTime(kWhirlpoolAcClockPos);
+uint16_t IRWhirlpoolAc::getClock(void) const {
+  return GETTIME(Clock);
 }
 
 /// Set the Off Timer time.
 /// @param[in] minspastmidnight The time expressed as minutes past midnight.
 void IRWhirlpoolAc::setOffTimer(const uint16_t minspastmidnight) {
-  this->setTime(kWhirlpoolAcOffTimerPos, minspastmidnight);
+  SETTIME(Off, minspastmidnight);
 }
 
 /// Get the Off Timer time..
 /// @return The time expressed as the Nr. of minutes past midnight.
-uint16_t IRWhirlpoolAc::getOffTimer(void) {
-  return this->getTime(kWhirlpoolAcOffTimerPos);
+uint16_t IRWhirlpoolAc::getOffTimer(void) const {
+  return GETTIME(Off);
 }
 
 /// Is the Off timer enabled?
 /// @return true, the Timer is enabled. false, the Timer is disabled.
-bool IRWhirlpoolAc::isOffTimerEnabled(void) {
-  return this->isTimerEnabled(kWhirlpoolAcOffTimerPos);
+bool IRWhirlpoolAc::isOffTimerEnabled(void) const {
+  return _.OffTimerEnabled;
 }
 
 /// Enable the Off Timer.
 /// @param[in] on true, the timer is enabled. false, the timer is disabled.
 void IRWhirlpoolAc::enableOffTimer(const bool on) {
-  this->enableTimer(kWhirlpoolAcOffTimerPos, on);
-  this->setCommand(kWhirlpoolAcCommandOffTimer);
+  _.OffTimerEnabled = on;
+  _.Cmd = kWhirlpoolAcCommandOffTimer;
 }
 
 /// Set the On Timer time.
 /// @param[in] minspastmidnight The time expressed as minutes past midnight.
 void IRWhirlpoolAc::setOnTimer(const uint16_t minspastmidnight) {
-  this->setTime(kWhirlpoolAcOnTimerPos, minspastmidnight);
+  SETTIME(On, minspastmidnight);
 }
 
 /// Get the On Timer time..
 /// @return The time expressed as the Nr. of minutes past midnight.
-uint16_t IRWhirlpoolAc::getOnTimer(void) {
-  return this->getTime(kWhirlpoolAcOnTimerPos);
+uint16_t IRWhirlpoolAc::getOnTimer(void) const {
+  return GETTIME(On);
 }
 
 /// Is the On timer enabled?
 /// @return true, the Timer is enabled. false, the Timer is disabled.
-bool IRWhirlpoolAc::isOnTimerEnabled(void) {
-  return this->isTimerEnabled(kWhirlpoolAcOnTimerPos);
+bool IRWhirlpoolAc::isOnTimerEnabled(void) const {
+  return _.OnTimerEnabled;
 }
 
 /// Enable the On Timer.
 /// @param[in] on true, the timer is enabled. false, the timer is disabled.
 void IRWhirlpoolAc::enableOnTimer(const bool on) {
-  this->enableTimer(kWhirlpoolAcOnTimerPos, on);
-  this->setCommand(kWhirlpoolAcCommandOnTimer);
+  _.OnTimerEnabled = on;
+  _.Cmd = kWhirlpoolAcCommandOnTimer;
 }
 
 /// Change the power toggle setting.
 /// @param[in] on true, the setting is on. false, the setting is off.
 void IRWhirlpoolAc::setPowerToggle(const bool on) {
-  setBit(&remote_state[kWhirlpoolAcPowerTogglePos],
-         kWhirlpoolAcPowerToggleOffset, on);
-  this->setSuper(false);  // Changing power cancels Super/Jet mode.
-  this->setCommand(kWhirlpoolAcCommandPower);
+  _.Power = on;
+  setSuper(false);  // Changing power cancels Super/Jet mode.
+  _.Cmd = kWhirlpoolAcCommandPower;
 }
 
 /// Get the value of the current power toggle setting.
 /// @return true, the setting is on. false, the setting is off.
-bool IRWhirlpoolAc::getPowerToggle(void) {
-  return GETBIT8(remote_state[kWhirlpoolAcPowerTogglePos],
-                 kWhirlpoolAcPowerToggleOffset);
+bool IRWhirlpoolAc::getPowerToggle(void) const {
+  return _.Power;
 }
 
 /// Get the Command (Button) setting of the A/C.
 /// @return The current Command (Button) of the A/C.
-uint8_t IRWhirlpoolAc::getCommand(void) {
-  return remote_state[kWhirlpoolAcCommandPos];
+uint8_t IRWhirlpoolAc::getCommand(void) const {
+  return _.Cmd;
 }
 
 /// Set the Sleep setting of the A/C.
 /// @param[in] on true, the setting is on. false, the setting is off.
 void IRWhirlpoolAc::setSleep(const bool on) {
-  setBit(&remote_state[kWhirlpoolAcSleepPos],
-         kWhirlpoolAcSleepOffset, on);
-  if (on) this->setFan(kWhirlpoolAcFanLow);
-  this->setCommand(kWhirlpoolAcCommandSleep);
+  _.Sleep = on;
+  if (on) setFan(kWhirlpoolAcFanLow);
+  _.Cmd = kWhirlpoolAcCommandSleep;
 }
 
 /// Get the Sleep setting of the A/C.
 /// @return true, the setting is on. false, the setting is off.
-bool IRWhirlpoolAc::getSleep(void) {
-  return GETBIT8(remote_state[kWhirlpoolAcSleepPos], kWhirlpoolAcSleepOffset);
+bool IRWhirlpoolAc::getSleep(void) const {
+  return _.Sleep;
 }
 
 /// Set the Super (Turbo/Jet) setting of the A/C.
 /// @param[in] on true, the setting is on. false, the setting is off.
 void IRWhirlpoolAc::setSuper(const bool on) {
   if (on) {
-    this->setFan(kWhirlpoolAcFanHigh);
-    switch (this->getMode()) {
+    setFan(kWhirlpoolAcFanHigh);
+    switch (_.Mode) {
       case kWhirlpoolAcHeat:
-        this->setTemp(kWhirlpoolAcMaxTemp + this->getTempOffset());
+        setTemp(kWhirlpoolAcMaxTemp + getTempOffset());
         break;
       case kWhirlpoolAcCool:
       default:
-        this->setTemp(kWhirlpoolAcMinTemp + this->getTempOffset());
-        this->setMode(kWhirlpoolAcCool);
+        setTemp(kWhirlpoolAcMinTemp + getTempOffset());
+        setMode(kWhirlpoolAcCool);
         break;
     }
-    remote_state[kWhirlpoolAcSuperPos] |= kWhirlpoolAcSuperMask;
+    _.Super1 = 1;
+    _.Super2 = 1;
   } else {
-    remote_state[kWhirlpoolAcSuperPos] &= ~kWhirlpoolAcSuperMask;
+    _.Super1 = 0;
+    _.Super2 = 0;
   }
-  this->setCommand(kWhirlpoolAcCommandSuper);
+  _.Cmd = kWhirlpoolAcCommandSuper;
 }
 
 /// Get the Super (Turbo/Jet) setting of the A/C.
 /// @return true, the setting is on. false, the setting is off.
-bool IRWhirlpoolAc::getSuper(void) {
-  return remote_state[kWhirlpoolAcSuperPos] & kWhirlpoolAcSuperMask;
+bool IRWhirlpoolAc:: getSuper(void) const {
+  return _.Super1 && _.Super2;
 }
 
 /// Set the Command (Button) setting of the A/C.
 /// @param[in] code The current Command (Button) of the A/C.
 void IRWhirlpoolAc::setCommand(const uint8_t code) {
-  remote_state[kWhirlpoolAcCommandPos] = code;
+  _.Cmd = code;
 }
 
 /// Convert a stdAc::opmode_t enum into its native mode.
 /// @param[in] mode The enum to be converted.
-/// @return The native equivilant of the enum.
+/// @return The native equivalent of the enum.
 uint8_t IRWhirlpoolAc::convertMode(const stdAc::opmode_t mode) {
   switch (mode) {
-    case stdAc::opmode_t::kCool: return kWhirlpoolAcCool;
+    case stdAc::opmode_t::kAuto: return kWhirlpoolAcAuto;
     case stdAc::opmode_t::kHeat: return kWhirlpoolAcHeat;
     case stdAc::opmode_t::kDry:  return kWhirlpoolAcDry;
     case stdAc::opmode_t::kFan:  return kWhirlpoolAcFan;
-    default:                     return kWhirlpoolAcAuto;
+    // Default to Cool as some Whirlpool models don't have an Auto mode.
+    // Ref: https://github.com/crankyoldgit/IRremoteESP8266/issues/1283
+    default:                     return kWhirlpoolAcCool;
   }
 }
 
 /// Convert a stdAc::fanspeed_t enum into it's native speed.
 /// @param[in] speed The enum to be converted.
-/// @return The native equivilant of the enum.
+/// @return The native equivalent of the enum.
 uint8_t IRWhirlpoolAc::convertFan(const stdAc::fanspeed_t speed) {
   switch (speed) {
     case stdAc::fanspeed_t::kMin:
@@ -506,9 +464,9 @@ uint8_t IRWhirlpoolAc::convertFan(const stdAc::fanspeed_t speed) {
   }
 }
 
-/// Convert a native mode into its stdAc equivilant.
+/// Convert a native mode into its stdAc equivalent.
 /// @param[in] mode The native setting to be converted.
-/// @return The stdAc equivilant of the native setting.
+/// @return The stdAc equivalent of the native setting.
 stdAc::opmode_t IRWhirlpoolAc::toCommonMode(const uint8_t mode) {
   switch (mode) {
     case kWhirlpoolAcCool: return stdAc::opmode_t::kCool;
@@ -519,9 +477,9 @@ stdAc::opmode_t IRWhirlpoolAc::toCommonMode(const uint8_t mode) {
   }
 }
 
-/// Convert a native fan speed into its stdAc equivilant.
+/// Convert a native fan speed into its stdAc equivalent.
 /// @param[in] speed The native setting to be converted.
-/// @return The stdAc equivilant of the native setting.
+/// @return The stdAc equivalent of the native setting.
 stdAc::fanspeed_t IRWhirlpoolAc::toCommonFanSpeed(const uint8_t speed) {
   switch (speed) {
     case kWhirlpoolAcFanHigh:   return stdAc::fanspeed_t::kMax;
@@ -531,22 +489,31 @@ stdAc::fanspeed_t IRWhirlpoolAc::toCommonFanSpeed(const uint8_t speed) {
   }
 }
 
-/// Convert the current internal state into its stdAc::state_t equivilant.
-/// @return The stdAc equivilant of the native settings.
-stdAc::state_t IRWhirlpoolAc::toCommon(void) {
-  stdAc::state_t result;
+/// Convert the current internal state into its stdAc::state_t equivalent.
+/// @param[in] prev Ptr to the previous state if required.
+/// @return The stdAc equivalent of the native settings.
+stdAc::state_t IRWhirlpoolAc::toCommon(const stdAc::state_t *prev) const {
+  stdAc::state_t result{};
+  // Start with the previous state if given it.
+  if (prev != NULL) {
+    result = *prev;
+  } else {
+    // Set defaults for non-zero values that are not implicitly set for when
+    // there is no previous state.
+    // e.g. Any setting that toggles should probably go here.
+    result.power = false;
+  }
   result.protocol = decode_type_t::WHIRLPOOL_AC;
-  result.model = this->getModel();
-  result.power = this->getPowerToggle();
-  result.mode = this->toCommonMode(this->getMode());
+  result.model = getModel();
+  if (_.Power) result.power = !result.power;
+  result.mode = toCommonMode(_.Mode);
   result.celsius = true;
-  result.degrees = this->getTemp();
-  result.fanspeed = this->toCommonFanSpeed(this->getFan());
-  result.swingv = this->getSwing() ? stdAc::swingv_t::kAuto :
-                                     stdAc::swingv_t::kOff;
-  result.turbo = this->getSuper();
-  result.light = this->getLight();
-  result.sleep = this->getSleep() ? 0 : -1;
+  result.degrees = getTemp();
+  result.fanspeed = toCommonFanSpeed(_.Fan);
+  result.swingv = getSwing() ? stdAc::swingv_t::kAuto : stdAc::swingv_t::kOff;
+  result.turbo = getSuper();
+  result.light = getLight();
+  result.sleep = _.Sleep ? 0 : -1;
   // Not supported.
   result.swingh = stdAc::swingh_t::kOff;
   result.quiet = false;
@@ -560,31 +527,29 @@ stdAc::state_t IRWhirlpoolAc::toCommon(void) {
 
 /// Convert the current internal state into a human readable string.
 /// @return A human readable string.
-String IRWhirlpoolAc::toString(void) {
+String IRWhirlpoolAc::toString(void) const {
   String result = "";
   result.reserve(200);  // Reserve some heap for the string to reduce fragging.
   result += addModelToString(decode_type_t::WHIRLPOOL_AC, getModel(), false);
-  result += addBoolToString(getPowerToggle(), kPowerToggleStr);
-  result += addModeToString(getMode(), kWhirlpoolAcAuto, kWhirlpoolAcCool,
+  result += addBoolToString(_.Power, kPowerToggleStr);
+  result += addModeToString(_.Mode, kWhirlpoolAcAuto, kWhirlpoolAcCool,
                             kWhirlpoolAcHeat, kWhirlpoolAcDry, kWhirlpoolAcFan);
   result += addTempToString(getTemp());
-  result += addFanToString(getFan(), kWhirlpoolAcFanHigh, kWhirlpoolAcFanLow,
+  result += addFanToString(_.Fan, kWhirlpoolAcFanHigh, kWhirlpoolAcFanLow,
                            kWhirlpoolAcFanAuto, kWhirlpoolAcFanAuto,
                            kWhirlpoolAcFanMedium);
   result += addBoolToString(getSwing(), kSwingStr);
   result += addBoolToString(getLight(), kLightStr);
   result += addLabeledString(minsToString(getClock()), kClockStr);
   result += addLabeledString(
-      isOnTimerEnabled() ? minsToString(getOnTimer()) : kOffStr,
-      kOnTimerStr);
+      _.OnTimerEnabled ? minsToString(getOnTimer()) : kOffStr, kOnTimerStr);
   result += addLabeledString(
-      isOffTimerEnabled() ? minsToString(getOffTimer()) : kOffStr,
-      kOffTimerStr);
-  result += addBoolToString(getSleep(), kSleepStr);
+      _.OffTimerEnabled ? minsToString(getOffTimer()) : kOffStr, kOffTimerStr);
+  result += addBoolToString(_.Sleep, kSleepStr);
   result += addBoolToString(getSuper(), kSuperStr);
-  result += addIntToString(getCommand(), kCommandStr);
+  result += addIntToString(_.Cmd, kCommandStr);
   result += kSpaceLBraceStr;
-  switch (this->getCommand()) {
+  switch (_.Cmd) {
     case kWhirlpoolAcCommandLight:
       result += kLightStr;
       break;

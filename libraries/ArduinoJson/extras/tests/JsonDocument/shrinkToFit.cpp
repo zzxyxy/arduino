@@ -1,5 +1,5 @@
-// ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2020
+// ArduinoJson - https://arduinojson.org
+// Copyright © 2014-2022, Benoit BLANCHON
 // MIT License
 
 #include <ArduinoJson.h>
@@ -94,8 +94,8 @@ TEST_CASE("BasicJsonDocument::shrinkToFit()") {
   }
 
   SECTION("owned raw") {
-    doc.set(serialized(std::string("[{},123]")));
-    testShrinkToFit(doc, "[{},123]", 8);
+    doc.set(serialized(std::string("[{},12]")));
+    testShrinkToFit(doc, "[{},12]", 8);
   }
 
   SECTION("linked key") {
