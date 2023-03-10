@@ -3,6 +3,7 @@
 #include <Ethernet.h>
 #include <Znetwork.h>
 #include <Zmqtt.h>
+#include "FastLED.h"
 
 #define ZDEBUG
 #define PANELLED 13
@@ -21,6 +22,14 @@ void setupeth();
 void setup_mqtt();
 void subscribeReceive(char* topic, byte* payload, unsigned int length);
 
+
+#define NUM_LEDS 17
+#define DATA_PIN 9
+#define DATA_PIN2 49
+
+CRGB leds[NUM_LEDS];
+CRGB leds2[NUM_LEDS];
+
 void setup() {
   pinMode(PANELLED, HIGH);
 #ifdef ZDEBUG
@@ -35,6 +44,16 @@ void setup() {
   m = new Zmqtt(*net->getEthernetClient(), server, mqttuser, mqttpass);  
   m->callback(subscribeReceive);
   m->subscribeTopic("core");
+
+  FastLED.addLeds<WS2812, DATA_PIN>(leds, NUM_LEDS);
+  FastLED.addLeds<WS2812, DATA_PIN2>(leds2, NUM_LEDS);
+  delay(300);
+  for (unsigned i = 0; i < NUM_LEDS; ++i) {
+    leds[i] = 0x00ff00;  //CRGB::Black;
+    leds2[i] = 0xFF0000;  //CRGB::Black;
+  }
+
+  FastLED.show();  
 }
 
 
