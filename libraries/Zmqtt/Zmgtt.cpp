@@ -55,3 +55,7 @@ void Zmqtt::callback(MQTT_CALLBACK_SIGNATURE) {
 void Zmqtt::subscribeTopic(char* topic) {
     mqttClient->subscribe(topic);
 }
+
+bool Zmqtt::publish(const char* topic, const char* payload) {
+  return mqttClient->publish(topic, payload);
+}

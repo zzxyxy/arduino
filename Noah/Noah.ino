@@ -34,7 +34,7 @@ void setup() {
   delay(3000);
   m = new Zmqtt(*net->getEthernetClient(), server, mqttuser, mqttpass);  
   m->callback(subscribeReceive);
-  m->subscribeTopic("testtopic");
+  m->subscribeTopic("core");
 }
 
 
@@ -46,27 +46,39 @@ void loop() {
 const size_t bufferSize = 128;
 StaticJsonDocument<bufferSize> doc;
 
-void subscribeReceive(char* topic, byte* payload, unsigned int length)
+void subscribeReceive(char* topicchar, byte* payload, unsigned int length)
 {
+
+  String topic = topicchar;
   // Print the topic
   Serial.print("Topic: ");
   Serial.println(topic);
- 
+
+  DeserializationError err = deserializeJson(doc, payload);
+
+  if (err) return;    
+
+  Serial.println("");
+  Serial.println("----------------------");
+  String req = doc["req"]; 
+  Serial.println(req);
+  // Print a newline
+  Serial.println("");
+
+  if (topic == "core") {
+    if (req == "ping") {
+      Serial.println("I got a ping");
+      m->publish(doc["topic"], "{\"ans\": \"ping\"}");
+    }
+  }
+
   // Print the message
   Serial.print("Message: ");
   for(int i = 0; i < length; i ++)
   {
     Serial.print(char(payload[i]));
   }
-
-  DeserializationError err = deserializeJson(doc, payload);
-
-  if (!err) {    
-    Serial.println("");
-    Serial.println("----------------------");
-    const char* name = doc["req"]; 
-    Serial.println(name);
-    // Print a newline
-    Serial.println("");
-  }
 }
+
+
+ 
