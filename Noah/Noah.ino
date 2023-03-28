@@ -4,6 +4,7 @@
 #include <Znetwork.h>
 #include <Zmqtt.h>
 #include "FastLED.h"
+#include "ZFastLed.h"
 
 #define ZDEBUG
 #define PANELLED 13
@@ -27,39 +28,38 @@ void subscribeReceive(char* topic, byte* payload, unsigned int length);
 #define DATA_PIN 9
 #define DATA_PIN2 49
 
-CRGB leds[NUM_LEDS];
-CRGB leds2[NUM_LEDS];
+//CRGB leds[NUM_LEDS];
+//CRGB leds2[NUM_LEDS];
+
+ZFastLed led1;
+ZFastLed led2;
 
 void setup() {
-  pinMode(PANELLED, HIGH);
+//   pinMode(PANELLED, HIGH);
 #ifdef ZDEBUG
-  Serial.begin(9600);
-  while (!Serial) {}
-  Serial.println("Start controller");
+   Serial.begin(9600);
+   while (!Serial) {}
+   Serial.println("Start controller");
 #endif
 
-  net = new Znetwork(mac);  
-  net->setup();
-  delay(3000);
-  m = new Zmqtt(*net->getEthernetClient(), server, mqttuser, mqttpass);  
-  m->callback(subscribeReceive);
-  m->subscribeTopic("core");
+// net = new Znetwork(mac);  
+// net->setup();
+// delay(3000);
+// m = new Zmqtt(*net->getEthernetClient(), server, mqttuser, mqttpass);  
+// m->callback(subscribeReceive);
+// m->subscribeTopic("core");
 
-  FastLED.addLeds<WS2812, DATA_PIN>(leds, NUM_LEDS);
-  FastLED.addLeds<WS2812, DATA_PIN2>(leds2, NUM_LEDS);
+  led1.setup<WS2812, DATA_PIN>(17, 9);
+  led2.setup<WS2812, DATA_PIN2>(17, 9);
   delay(300);
-  for (unsigned i = 0; i < NUM_LEDS; ++i) {
-    leds[i] = 0x00ff00;  //CRGB::Black;
-    leds2[i] = 0xFF0000;  //CRGB::Black;
-  }
+  led1.setAllColor(0x00ff00);
+  led2.setAllColor(0x0000ff);
 
-  FastLED.show();  
 }
-
 
 void loop() {
   net->loop();
-  m->loop(); 
+//  m->loop(); 
 }
 
 const size_t bufferSize = 128;
