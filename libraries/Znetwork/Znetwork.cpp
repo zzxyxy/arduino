@@ -23,6 +23,10 @@ void Znetwork::setup() {
 #endif
     }
     // no point in carrying on, so do nothing forevermore:
+  } else {
+    for (int i=0; i<clientcounter; ++i) {
+      clients[i]->netConnect();
+    }
   }
   // print your local IP address:
 #ifdef ZDEBUG
@@ -59,6 +63,9 @@ void Znetwork::loop() {
       //print your local IP address:
       Serial.print("My IP address: ");
       Serial.println(Ethernet.localIP());
+      for (int i=0; i<clientcounter; ++i) {
+        clients[i]->netRebind();
+      }
       break;
 
     default:
@@ -67,6 +74,14 @@ void Znetwork::loop() {
   }
 #endif
 }
+
+
+void Znetwork::subscribe(ZnetworkListener* client) {
+  clients[clientcounter] = client;
+  ++clientcounter;
+  client->netConnect();
+}
+
 
 EthernetClient* Znetwork::getEthernetClient() {
     return &ethClient;

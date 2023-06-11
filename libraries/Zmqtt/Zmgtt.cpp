@@ -4,24 +4,31 @@
 Zmqtt::Zmqtt(Client& client, char* server, char* mqttuser, char* mqttpass) {
   mqttClient = new PubSubClient(client);
   mqttClient->setServer(server, 1883);
+  user = mqttuser;
+  pass = mqttpass;
+}
 
+
+void Zmqtt::connect() {
   long randNumber = random(10000);
   char name[10];
 
   sprintf(name, "Noah-", randNumber);
-  if (mqttClient->connect(name, mqttuser, mqttpass))
+  if (mqttClient->connect(name, user, pass))
   {
 #ifdef ZDEBUG
-    Serial.println("Connection has been established, well done");
+    Serial.println("MQTT connected");
 #endif
 
   }
 #ifdef ZDEBUG
   else
   {
-    Serial.println("Looks like the server connection failed...");
+    Serial.println("MQTT connection failed");
   }
 #endif
+
+mqttClient->subscribe(topic);
 }
 
 
@@ -53,9 +60,17 @@ void Zmqtt::callback(MQTT_CALLBACK_SIGNATURE) {
 }
 
 void Zmqtt::subscribeTopic(char* topic) {
-    mqttClient->subscribe(topic);
+    this->topic = topic;
 }
 
 bool Zmqtt::publish(const char* topic, const char* payload) {
   return mqttClient->publish(topic, payload);
+}
+
+void Zmqtt::netConnect() {
+  connect();
+}
+
+void Zmqtt::netRebind() {
+  connect();
 }

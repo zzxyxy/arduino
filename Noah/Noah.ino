@@ -5,6 +5,7 @@
 #include <Zmqtt.h>
 #include "FastLED.h"
 #include "ZFastLed.h"
+#include "Zledcontroller.h"
 
 #define ZDEBUG
 #define PANELLED 13
@@ -25,41 +26,47 @@ void subscribeReceive(char* topic, byte* payload, unsigned int length);
 
 
 #define NUM_LEDS 17
-#define DATA_PIN 9
-#define DATA_PIN2 49
-
-//CRGB leds[NUM_LEDS];
-//CRGB leds2[NUM_LEDS];
+#define DATA_PIN 25
+#define DATA_PIN2 29
 
 ZFastLed led1;
 ZFastLed led2;
+Zledcontroller led3(44);
+Zledcontroller led4(46);
 
 void setup() {
+
 //   pinMode(PANELLED, HIGH);
 #ifdef ZDEBUG
    Serial.begin(9600);
    while (!Serial) {}
    Serial.println("Start controller");
 #endif
-
-// net = new Znetwork(mac);  
-// net->setup();
-// delay(3000);
-// m = new Zmqtt(*net->getEthernetClient(), server, mqttuser, mqttpass);  
-// m->callback(subscribeReceive);
-// m->subscribeTopic("core");
+  led3.setup();
+  led4.setup();
+  led3.set(0);
+  led4.set(0);
+  net = new Znetwork(mac);  
+  net->setup();
+  delay(3000);
+  m = new Zmqtt(*net->getEthernetClient(), server, mqttuser, mqttpass);  
+  m->callback(subscribeReceive);
+  m->subscribeTopic("core");
+  net->subscribe(m);
 
   led1.setup<WS2812, DATA_PIN>(17, 9);
   led2.setup<WS2812, DATA_PIN2>(17, 9);
   delay(300);
-  led1.setAllColor(0x00ff00);
-  led2.setAllColor(0x0000ff);
-
+  led1.setAllColor(0x000000);
+  led2.setAllColor(0x000000);
 }
 
 void loop() {
   net->loop();
-//  m->loop(); 
+  m->loop(); 
+  led3.loop();
+  led4.loop();
+
 }
 
 const size_t bufferSize = 128;
@@ -75,6 +82,10 @@ void subscribeReceive(char* topicchar, byte* payload, unsigned int length)
 
   DeserializationError err = deserializeJson(doc, payload);
 
+#define REPLYSIZE 200
+  char reply[REPLYSIZE];
+
+
   if (err) return;    
 
   Serial.println("");
@@ -87,7 +98,43 @@ void subscribeReceive(char* topicchar, byte* payload, unsigned int length)
   if (topic == "core") {
     if (req == "ping") {
       Serial.println("I got a ping");
-      m->publish(doc["topic"], "{\"ans\": \"ping\"}");
+      m->publish(doc["topic"], "{\"messagetype\": \"ping\"}");
+    }
+    if (req == "lamp1") {
+      Serial.println("Lamp1");
+      String r = doc["r"];
+      String g = doc["g"];
+      String b = doc["b"];
+      led2.setAllColor(r.toInt(), g.toInt(), b.toInt());
+      String replys = "{\"messagetype\": \"lampstatus\", \"name\": \"lamp1\", \"r\": " + r + ", \"g\": " + g + ", \"b\": " + b + "}";
+      replys.toCharArray(reply, REPLYSIZE);
+      m->publish("core", reply);
+    }
+    if (req == "lamp2") {
+      Serial.println("Lamp2");
+      String r = doc["r"];
+      String g = doc["g"];
+      String b = doc["b"];
+      led1.setAllColor(r.toInt(), g.toInt(), b.toInt());
+      String replys = "{\"messagetype\": \"lampstatus\", \"name\": \"lamp2\", \"r\": " + r + ", \"g\": " + g + ", \"b\": " + b + "}";
+      replys.toCharArray(reply, REPLYSIZE);
+      m->publish("core", reply);
+    }
+    if (req == "lamp3") {
+      Serial.println("Lamp3");
+      String w = doc["w"];
+      led3.set(w.toInt());
+      String replys = "{\"messagetype\": \"lampstatus\", \"name\": \"lamp3\", \"w\": " + w + "}";
+      replys.toCharArray(reply, REPLYSIZE);
+      m->publish("core", reply);
+    }
+    if (req == "lamp4") {
+      Serial.println("Lamp4");
+      String w = doc["w"];
+      led4.set(w.toInt());
+      String replys = "{\"messagetype\": \"lampstatus\", \"name\": \"lamp4\", \"w\": " + w + "}";
+      replys.toCharArray(reply, REPLYSIZE);
+      m->publish("core", reply);
     }
   }
 

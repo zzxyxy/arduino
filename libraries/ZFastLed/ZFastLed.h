@@ -16,6 +16,7 @@ public:
   }
   void loop();
   void setAllColor(CRGB color);
+  void setAllColor(uint8_t r, uint8_t g, uint8_t b);
 
 };
 
