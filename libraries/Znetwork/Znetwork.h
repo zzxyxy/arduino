@@ -10,6 +10,7 @@ public:
     ZnetworkListener(){};
     virtual void netConnect() = 0;
     virtual void netRebind() = 0;
+    virtual void netDisconnect() = 0;
 };
 
 class Znetwork {
@@ -17,9 +18,11 @@ class Znetwork {
     byte* mac;
     ZnetworkListener* clients[10];
     int clientcounter = 0;
+    int isConnected = 0;
 
     public:
         Znetwork(byte* ethmac);
+        void connect();
         void setup();
         void loop();
         EthernetClient* getEthernetClient();

@@ -9,12 +9,14 @@ class Zmqtt : public ZnetworkListener {
     char* user;
     char* pass;
     char* topic;
+    bool isConnected = 0;
 
     public:
         Zmqtt(Client& client, char* server, char* mqttuser, char* mqttpass);
 
         void loop();
         void connect();
+        void disConnect();
         void subscribeReceive(char* topic, byte* payload, unsigned int length);
         void callback(MQTT_CALLBACK_SIGNATURE);
         void subscribeTopic(char* topic);
@@ -22,4 +24,5 @@ class Zmqtt : public ZnetworkListener {
 
         virtual void netConnect();
         virtual void netRebind();
+        virtual void netDisconnect();
 };

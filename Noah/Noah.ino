@@ -24,10 +24,10 @@ void setupeth();
 void setup_mqtt();
 void subscribeReceive(char* topic, byte* payload, unsigned int length);
 
-
 #define NUM_LEDS 17
 #define DATA_PIN 25
 #define DATA_PIN2 29
+#define LAMPTOPIC "lamp"
 
 ZFastLed led1;
 ZFastLed led2;
@@ -48,10 +48,10 @@ void setup() {
   led4.set(0);
   net = new Znetwork(mac);  
   net->setup();
-  delay(3000);
+  delay(300);
   m = new Zmqtt(*net->getEthernetClient(), server, mqttuser, mqttpass);  
   m->callback(subscribeReceive);
-  m->subscribeTopic("core");
+  m->subscribeTopic(LAMPTOPIC);
   net->subscribe(m);
 
   led1.setup<WS2812, DATA_PIN>(17, 9);
@@ -85,7 +85,6 @@ void subscribeReceive(char* topicchar, byte* payload, unsigned int length)
 #define REPLYSIZE 200
   char reply[REPLYSIZE];
 
-
   if (err) return;    
 
   Serial.println("");
@@ -95,7 +94,7 @@ void subscribeReceive(char* topicchar, byte* payload, unsigned int length)
   // Print a newline
   Serial.println("");
 
-  if (topic == "core") {
+  if (topic == LAMPTOPIC) {
     if (req == "ping") {
       Serial.println("I got a ping");
       m->publish(doc["topic"], "{\"messagetype\": \"ping\"}");
@@ -108,7 +107,7 @@ void subscribeReceive(char* topicchar, byte* payload, unsigned int length)
       led2.setAllColor(r.toInt(), g.toInt(), b.toInt());
       String replys = "{\"messagetype\": \"lampstatus\", \"name\": \"lamp1\", \"r\": " + r + ", \"g\": " + g + ", \"b\": " + b + "}";
       replys.toCharArray(reply, REPLYSIZE);
-      m->publish("core", reply);
+      m->publish(LAMPTOPIC, reply);
     }
     if (req == "lamp2") {
       Serial.println("Lamp2");
@@ -118,7 +117,7 @@ void subscribeReceive(char* topicchar, byte* payload, unsigned int length)
       led1.setAllColor(r.toInt(), g.toInt(), b.toInt());
       String replys = "{\"messagetype\": \"lampstatus\", \"name\": \"lamp2\", \"r\": " + r + ", \"g\": " + g + ", \"b\": " + b + "}";
       replys.toCharArray(reply, REPLYSIZE);
-      m->publish("core", reply);
+      m->publish(LAMPTOPIC, reply);
     }
     if (req == "lamp3") {
       Serial.println("Lamp3");
@@ -126,7 +125,7 @@ void subscribeReceive(char* topicchar, byte* payload, unsigned int length)
       led3.set(w.toInt());
       String replys = "{\"messagetype\": \"lampstatus\", \"name\": \"lamp3\", \"w\": " + w + "}";
       replys.toCharArray(reply, REPLYSIZE);
-      m->publish("core", reply);
+      m->publish(LAMPTOPIC, reply);
     }
     if (req == "lamp4") {
       Serial.println("Lamp4");
@@ -134,7 +133,7 @@ void subscribeReceive(char* topicchar, byte* payload, unsigned int length)
       led4.set(w.toInt());
       String replys = "{\"messagetype\": \"lampstatus\", \"name\": \"lamp4\", \"w\": " + w + "}";
       replys.toCharArray(reply, REPLYSIZE);
-      m->publish("core", reply);
+      m->publish(LAMPTOPIC, reply);
     }
   }
 

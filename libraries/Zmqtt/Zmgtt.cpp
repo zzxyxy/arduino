@@ -10,6 +10,7 @@ Zmqtt::Zmqtt(Client& client, char* server, char* mqttuser, char* mqttpass) {
 
 
 void Zmqtt::connect() {
+  if (isConnected) return;
   long randNumber = random(10000);
   char name[10];
 
@@ -19,7 +20,7 @@ void Zmqtt::connect() {
 #ifdef ZDEBUG
     Serial.println("MQTT connected");
 #endif
-
+    isConnected = 1;
   }
 #ifdef ZDEBUG
   else
@@ -33,7 +34,13 @@ mqttClient->subscribe(topic);
 
 
 void Zmqtt::loop() {
-    mqttClient->loop();
+  if (!mqttClient->connected()) {
+    disConnect();
+  }
+  mqttClient->loop();
+  if (!isConnected) {
+    connect();
+  }
 }
 
 
@@ -54,6 +61,10 @@ void Zmqtt::subscribeReceive(char* topic, byte* payload, unsigned int length)
   Serial.println("");
 }
 
+void Zmqtt::disConnect() {
+  isConnected = 0;
+  mqttClient->disconnect();
+}
 
 void Zmqtt::callback(MQTT_CALLBACK_SIGNATURE) {
     mqttClient->setCallback(callback);
@@ -73,4 +84,8 @@ void Zmqtt::netConnect() {
 
 void Zmqtt::netRebind() {
   connect();
+}
+
+void Zmqtt::netDisconnect() {
+  disConnect();
 }
