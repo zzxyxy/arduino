@@ -1,4 +1,8 @@
+
 #include<IRremote.h>
+
+#ifndef ZIR_H
+#define ZIR_H
 
 typedef void (*irFunc)(bool);
 
@@ -29,3 +33,5 @@ private:
   decode_results m_results;
   unsigned long m_pressedtimestamp= 0;
 };
+
+#endif

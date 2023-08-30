@@ -293,13 +293,15 @@ public:
     bool decodeSAMSUNG(decode_results *aResults);
     bool decodeHashOld(decode_results *aResults);
 
+    bool decode_old(decode_results *aResults);
+
     bool decode(
             decode_results *aResults)
-                    __attribute__ ((deprecated ("Please use IrReceiver.decode() without a parameter and IrReceiver.decodedIRData.<fieldname> ."))); // deprecated
+                    __attribute__ ((deprecated ("Please use IrReceiver.decode() without a parameter and IrReceiver.decodedIRData.<fieldname> .")));
 
     // for backward compatibility. Now in IRFeedbackLED.hpp
     void blink13(uint8_t aEnableLEDFeedback)
-            __attribute__ ((deprecated ("Please use setLEDFeedback() or enableLEDFeedback() / disableLEDFeedback()."))); // deprecated
+            __attribute__ ((deprecated ("Please use setLEDFeedback() or enableLEDFeedback() / disableLEDFeedback().")));
 
     /*
      * Internal functions
@@ -435,6 +437,9 @@ public:
     size_t write(decode_type_t aProtocol, uint16_t aAddress, uint16_t aCommand, int_fast8_t aNumberOfRepeats = NO_REPEATS);
 
     void enableIROut(uint_fast8_t aFrequencyKHz);
+#if defined(SEND_PWM_BY_TIMER)
+    void enableHighFrequencyIROut(uint_fast16_t aFrequencyKHz); // Used for Bang&Olufsen
+#endif
 
     void sendPulseDistanceWidthFromArray(uint_fast8_t aFrequencyKHz, uint16_t aHeaderMarkMicros, uint16_t aHeaderSpaceMicros,
             uint16_t aOneMarkMicros, uint16_t aOneSpaceMicros, uint16_t aZeroMarkMicros, uint16_t aZeroSpaceMicros,
