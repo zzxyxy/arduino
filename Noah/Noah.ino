@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <ArduinoJson.h>
 #include <SPI.h>
 #include <Ethernet.h>
@@ -24,15 +25,20 @@ void setupeth();
 void setup_mqtt();
 void subscribeReceive(char* topic, byte* payload, unsigned int length);
 
+#define REPLYSIZE 200
 #define NUM_LEDS 17
 #define DATA_PIN 25
 #define DATA_PIN2 29
 #define LAMPTOPIC "lamp"
+#define IRTOPIC "irremote"
 
 ZFastLed led1;
 ZFastLed led2;
 Zledcontroller led3(44);
 Zledcontroller led4(46);
+
+#include "PinDefinitionsAndMore.h"
+#include <IRremote.hpp> // include the library
 
 void setup() {
 
@@ -59,14 +65,16 @@ void setup() {
   delay(300);
   led1.setAllColor(0x000000);
   led2.setAllColor(0x000000);
+  irsetup();
+  Serial.println("Ready");
 }
 
 void loop() {
+  irloop();
   net->loop();
   m->loop(); 
   led3.loop();
   led4.loop();
-
 }
 
 const size_t bufferSize = 128;
@@ -82,7 +90,6 @@ void subscribeReceive(char* topicchar, byte* payload, unsigned int length)
 
   DeserializationError err = deserializeJson(doc, payload);
 
-#define REPLYSIZE 200
   char reply[REPLYSIZE];
 
   if (err) return;    
@@ -145,5 +152,32 @@ void subscribeReceive(char* topicchar, byte* payload, unsigned int length)
   }
 }
 
+void irsetup() {
+    // Just to know which program is running on my Arduino
+    Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_IRREMOTE));
 
+    // Start the receiver and if not 3. parameter specified, take LED_BUILTIN pin from the internal boards definition as default feedback LED
+    IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
+
+    Serial.print(F("Ready to receive IR signals of protocols: "));
+    printActiveIRProtocols(&Serial);
+    Serial.println(F("at pin " STR(IR_RECEIVE_PIN)));
+}
  
+void irloop() {
+    if (IrReceiver.decode()) {
+        IrReceiver.printIRResultShort(&Serial);
+        IrReceiver.printIRSendUsage(&Serial);
+        IrReceiver.resume(); 
+        char reply[REPLYSIZE];
+        String replys = "{\"messagetype\": \"received\", \"receiver\": \"noah\", \"command\": " + String(IrReceiver.decodedIRData.command) + 
+        ", \"decodedRawData\": " + String(IrReceiver.decodedIRData.decodedRawData) + 
+        ", \"decodedRawData\": " + String(IrReceiver.decodedIRData.decodedRawData) +
+        ", \"protocol\": " + String(IrReceiver.decodedIRData.protocol) +
+        ", \"extra\": " + String(IrReceiver.decodedIRData.extra) +
+        ", \"flags\": " + String(IrReceiver.decodedIRData.flags) +        
+        " }";
+        replys.toCharArray(reply, IRTOPIC);
+        m->publish(IRTOPIC, reply);
+    }
+} 
