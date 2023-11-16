@@ -21,3 +21,8 @@ void ZFastLed::setAllColor(uint8_t r, uint8_t g, uint8_t b) {
   color.b = b;
   setAllColor(color);
 }
+
+
+CRGB ZFastLed::getLed(const int led) {
+  return leds[led];
+}

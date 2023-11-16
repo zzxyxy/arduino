@@ -9,10 +9,11 @@ class Zmqtt : public ZnetworkListener {
     char* user;
     char* pass;
     char* topic;
+    char* name;
     bool isConnected = 0;
 
     public:
-        Zmqtt(Client& client, char* server, char* mqttuser, char* mqttpass);
+        Zmqtt(Client& client, char* server, char* mqttuser, char* mqttpass, char* cliname);
 
         void loop();
         void connect();

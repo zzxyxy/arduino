@@ -1,21 +1,24 @@
 #include "Zmqtt.h"
 
 
-Zmqtt::Zmqtt(Client& client, char* server, char* mqttuser, char* mqttpass) {
+Zmqtt::Zmqtt(Client& client, char* server, char* mqttuser, char* mqttpass, char* cliname) {
   mqttClient = new PubSubClient(client);
   mqttClient->setServer(server, 1883);
   user = mqttuser;
   pass = mqttpass;
+  name = cliname;
 }
 
 
 void Zmqtt::connect() {
   if (isConnected) return;
   long randNumber = random(10000);
-  char name[10];
+  char fullname[15];
 
-  sprintf(name, "Noah-", randNumber);
-  if (mqttClient->connect(name, user, pass))
+  Serial.println(name);
+  sprintf(fullname, "%s-%d", name, randNumber);
+  Serial.println(fullname);
+  if (mqttClient->connect(fullname, user, pass))
   {
 #ifdef ZDEBUG
     Serial.println("MQTT connected");
@@ -35,6 +38,7 @@ mqttClient->subscribe(topic);
 
 void Zmqtt::loop() {
   if (!mqttClient->connected()) {
+    Serial.println("MQTT connection lost connection");
     disConnect();
   }
   mqttClient->loop();

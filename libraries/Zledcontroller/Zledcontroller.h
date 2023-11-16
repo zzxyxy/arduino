@@ -1,7 +1,7 @@
 #ifndef ZLEDCONTROLLER
 #define ZLEDCONTROLLER
 
-class Zledcontroller 
+class Zledcontroller
 {
 public:
   enum State {
@@ -12,17 +12,19 @@ public:
   Zledcontroller(const int dimPin, const int switchPin);
   void setup();
   void loop();
-  
+
   void set(int dim);
+  int  get() {return setDim;};
+
   State getState() const;
 private:
   const int mDimPin;
   const int mSwitchPin;
   bool mSwitch = false;
-  
+
   unsigned long wait = 40;
   unsigned long timestamp = 0;
-  unsigned long next = 0;  
+  unsigned long next = 0;
 
   int actualDim = 0;
   int setDim = 0;
